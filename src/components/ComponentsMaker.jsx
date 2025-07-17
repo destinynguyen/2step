@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-
+import { Container } from './ui/Container';
 
 const ComponentsMaker = () => {
-
-
-	return (
-        <div></div>
-)
+        return (
+                <Container text="Components Maker" showResetButton={true} onReset={() => {}}>
+                        
+                </Container>
+        )
 };
 
 

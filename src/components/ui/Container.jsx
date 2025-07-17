@@ -4,7 +4,6 @@ export function Container({
 	children, 
 	className = "", 
 	maxWidth = "max-w-[464px]",
-	showShadow = true,
 	showBorder = true,
 	selectNone = true,
 	text = "Default Text",
@@ -25,10 +24,6 @@ export function Container({
 		"flex",
 		"flex-col",
 	];
-
-	if (showShadow) {
-		baseClasses.push("shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)]");
-	}
 
 	if (showBorder) {
 		baseClasses.push("border border-gray-200");
@@ -55,7 +50,7 @@ export function Container({
 						</button>
 					)}
 				</div>
-				<div className="space-y-4">
+				<div>
 					<div className="w-full bg-white border border-[#5750E3]/30 rounded-md relative overflow-hidden" style={{ minHeight: '420px', height: 'auto' }}>
 						{children}
 					</div>

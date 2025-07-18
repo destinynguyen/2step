@@ -14,82 +14,76 @@ import './reused-animations/scale.css';
 
 // Render
 const ComponentsMaker = () => {
-        const [exploreButtonClicked, setExploreButtonClicked] = useState(false);
-        const [isStep1, setIsStep1] = useState(true);
-        const [isStep2, setIsStep2] = useState(false);
-        const [isStep3, setIsStep3] = useState(false);
+        const [currentStep, setCurrentStep] = useState(1);
         const [currentStepIndex, setCurrentStepIndex] = useState(0);
         const [showNavigationExample, setShowNavigationExample] = useState(false);
-        const [showInputExample, setShowInputExample] = useState(false);
         const [showFlexiCharacter, setShowFlexiCharacter] = useState(false);
         
-        // Animation states
+        // Consolidated animation states
         const [isAnimating, setIsAnimating] = useState(false);
-        const [isStep1FadingOut, setIsStep1FadingOut] = useState(false);
-        const [isStep2FadingOut, setIsStep2FadingOut] = useState(false);
-        const [isNavigationFadingOut, setIsNavigationFadingOut] = useState(false);
+        const [isFadingOut, setIsFadingOut] = useState(false);
+
+        // Timeout refs for cleanup
+        const timeoutRefs = useRef([]);
+
+        // Cleanup function for timeouts
+        const clearAllTimeouts = () => {
+                timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+                timeoutRefs.current = [];
+        };
+
+        // Cleanup on unmount
+        useEffect(() => {
+                return () => clearAllTimeouts();
+        }, []);
+
+        // Helper function to add timeout with cleanup
+        const addTimeout = (callback, delay) => {
+                const timeoutId = setTimeout(callback, delay);
+                timeoutRefs.current.push(timeoutId);
+                return timeoutId;
+        };
 
         // Functions
         // Handle reset button click
         const handleResetButtonClick = () => {
-                setExploreButtonClicked(false);
-                setIsStep2(false);
+                clearAllTimeouts();
+                setCurrentStep(1);
                 setCurrentStepIndex(0);
                 setShowNavigationExample(false);
                 setShowFlexiCharacter(false);
                 setIsAnimating(false);
-                setIsStep1(true);
-                setIsStep1FadingOut(false);
-                setIsStep2FadingOut(false);
-                setIsNavigationFadingOut(false);
+                setIsFadingOut(false);
         };
 
-        // Handle first button click - using LCM's timing approach
+        // Handle first button click - optimized timing approach
         const handleExploreButtonClick = () => {
-                // Start animation sequence
+                if (isAnimating) return; // Prevent multiple clicks
+                
                 setIsAnimating(true);
-                setExploreButtonClicked(true);
-                setIsStep1FadingOut(true);
+                setIsFadingOut(true);
 
-                // Wait for fade-out animation to complete (0.5s) plus buffer
-                setTimeout(() => {                        
-                        // Show step 2 and start navigation animation
-                        setIsStep2(true);
+                // Wait for fade-out animation to complete
+                addTimeout(() => {
+                        setCurrentStep(2);
+                        setIsFadingOut(false);
                         
-                        // Wait a bit, then show navigation area
-                        setTimeout(() => {
+                        // Show navigation area after step 2 container appears
+                        addTimeout(() => {
                                 setShowNavigationExample(true);
-                                setShowInputExample(true);
-                                // Wait for navigation to appear, then show Flexi character
-                                setTimeout(() => {
+                                
+                                // Show Flexi character after navigation appears
+                                addTimeout(() => {
                                         setShowFlexiCharacter(true);
                                         setIsAnimating(false);
-                                        // Hide step 1 elements after fade-out completes
-                                        setIsStep1(false);
-                                        setIsStep1FadingOut(false);
-                                }, 800); // Wait for navigation animation
-                        }, 300); // Wait for step 2 container
-                }, 600); // Wait for fade-out animations (0.5s + 0.1s buffer)
+                                }, 400);
+                        }, 400);
+                }, 600);
         };
 
         const handleContinue1ButtonClick = () => {
-                // Start step 2 fade-out animation for text and button
-                setIsAnimating(true);
-                setIsStep2FadingOut(true);
-                
-                // Wait for text and button fade-out to complete, then fade out navigation
-                setTimeout(() => {
-                        setIsNavigationFadingOut(true);
-                        
-                        // Wait for navigation fade-out to complete, then transition to step 3
-                        setTimeout(() => {
-                                setIsStep2(false);
-                                setIsStep3(true);
-                                setIsAnimating(false);
-                                setIsStep2FadingOut(false);
-                                setIsNavigationFadingOut(false);
-                        }, 600); // Wait for navigation fade-out animations (0.5s + 0.1s buffer)
-                }, 600); // Wait for text/button fade-out animations (0.5s + 0.1s buffer)
+                // Reset the component when continue is clicked
+                handleResetButtonClick();
         };
 
         // Handle navigation
@@ -99,11 +93,11 @@ const ComponentsMaker = () => {
 
         return (
                 <Container text="Components Maker" showResetButton={true} onReset={handleResetButtonClick}>
-                        {/* Step 1: Intro text - only show if not hidden */}
-                        {isStep1 && (
+                        {/* Step 1: Intro text */}
+                        {currentStep === 1 && (
                                 <>
                                         <FlexiText 
-                                                className={isStep1FadingOut ? 'fade-out-up-animation' : ''}
+                                                className={isFadingOut ? 'fade-out-up-animation' : ''}
                                                 flexiImage={FlexiWave}>
                                                 Welcome to the Components Maker!
                                         </FlexiText>
@@ -116,12 +110,12 @@ const ComponentsMaker = () => {
                                 </>
                         )}
 
-                        {/* Step 2: Test area - using LCM's conditional rendering pattern */}
-                        {isStep2 && (
+                        {/* Step 2: Test area */}
+                        {currentStep === 2 && (
                                 <>
-                                        {/* Navigation area - appears first */}
+                                        {/* Navigation area */}
                                         {showNavigationExample && (
-                                                <div className={`flex justify-center items-center min-h-[100px] w-50 bg-gray-200 rounded m-4 ${isNavigationFadingOut ? 'fade-out-down-animation' : 'fade-in-down-animation'}`}>
+                                                <div className="flex justify-center items-center min-h-[100px] w-50 bg-gray-200 rounded m-4 fade-in-down-animation">
                                                         <NavButtons 
                                                                 currentStepIndex={currentStepIndex}
                                                                 totalSteps={5}
@@ -129,8 +123,10 @@ const ComponentsMaker = () => {
                                                         />
                                                 </div>
                                         )}
-                                        {showInputExample && (
-                                                <div className={`flex justify-center items-center min-h-[100px] w-50 bg-gray-200 rounded m-4 ${isNavigationFadingOut ? 'fade-out-down-animation' : 'fade-in-up-animation'}`}>
+                                        
+                                        {/* Input example - always shows with navigation */}
+                                        {showNavigationExample && (
+                                                <div className="flex justify-center items-center min-h-[100px] w-50 bg-gray-200 rounded m-4 fade-in-up-animation">
                                                         <Input 
                                                                 placeholder="Default text"
                                                                 className="max-w-md"
@@ -138,33 +134,16 @@ const ComponentsMaker = () => {
                                                 </div>
                                         )}
                                         
-                                        {/* Flexi character - appears after navigation */}
+                                        {/* Flexi character */}
                                         {showFlexiCharacter && (
                                                 <>
                                                         <FlexiText 
-                                                                className={isStep2FadingOut ? 'fade-out-up-animation' : 'fade-in-up-animation'}
+                                                                className="fade-in-up-animation"
                                                                 flexiImage={FlexiTeacher}>
-                                                                Above are some more of the components you can make!
+                                                                Aside from the container, the text, and the buttons, here are some more of the components you can make!
                                                         </FlexiText>
-                                                        <GlowButton 
-                                                                onClick={handleContinue1ButtonClick}
-                                                                disabled={isAnimating}
-                                                        >
-                                                                <p>Continue</p>
-                                                        </GlowButton>
                                                 </>
                                         )}
-                                </>
-                        )}
-
-                        {/* Step 3: Test area - using LCM's conditional rendering pattern */}
-                        {isStep3 && (
-                                <>
-                                        <FlexiText 
-                                                className="fade-in-up-animation"
-                                                flexiImage={FlexiTeacher}>
-                                                These componets can easily be altered to fit your needs as well!
-                                        </FlexiText>
                                 </>
                         )}
                 </Container>

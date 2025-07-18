@@ -89,7 +89,7 @@ export function FlexiText({
                 `}
             </style>
             
-            <div className={`flexi-wave-bubble-container ${containerClassName}`} {...props}>
+            <div className={`flexi-wave-bubble-container ${containerClassName} ${className || ''}`} {...props}>
                 <img 
                     src={flexiImage} 
                     alt={flexiAlt} 

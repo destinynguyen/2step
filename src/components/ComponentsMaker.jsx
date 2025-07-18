@@ -28,8 +28,8 @@ const ComponentsMaker = () => {
         return (
                 <Container text="Components Maker" showResetButton={true} onReset={handleResetButtonClick}>
                         <FlexiText 
-                                className={firstButtonClicked ? 'shrink-out-animation' : ''}
-                        flexiImage={FlexiTeacher}>
+                                className={firstButtonClicked ? 'fade-out-up-animation' : ''}
+                                flexiImage={FlexiTeacher}>
                                 Welcome to the Components Maker!
                         </FlexiText>
                         <GlowButton 

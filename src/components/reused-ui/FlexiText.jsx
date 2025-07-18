@@ -1,5 +1,6 @@
 import React from 'react';
 import FlexiWave from '../../assets/All Flexi Poses/SVG/Flexi_Wave.svg';
+import '../reused-animations/fade.css';
 
 export function FlexiText({ 
     children, 
@@ -66,53 +67,6 @@ export function FlexiText({
                         border-right: 18px solid #fff;
                         filter: drop-shadow(-5px 2px 2px rgba(0,0,0,0.08));
                         transform: rotate(-34deg);
-                    }
-                    
-                    /* Animation Classes */
-                    .flexi-telescope-fade-in {
-                        animation: flexiFadeIn 0.6s ease-in-out;
-                    }
-                    
-                    .speech-bubble-fade-in {
-                        animation: speechBubbleFadeIn 0.5s ease-in-out 0.2s both;
-                    }
-                    
-                    .flexi-first-step-fade-out {
-                        animation: flexiFirstStepFadeOut 0.2s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
-                    }
-                    
-                    /* Keyframe Animations */
-                    @keyframes flexiFadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(10px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                    
-                    @keyframes speechBubbleFadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateX(-10px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
-                    }
-                    
-                    @keyframes flexiFirstStepFadeOut {
-                        from {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                        to {
-                            opacity: 0;
-                            transform: translateY(-10px);
-                        }
                     }
                     
                     /* Responsive adjustments */

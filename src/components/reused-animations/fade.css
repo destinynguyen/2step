@@ -1,0 +1,122 @@
+/* Fade Animations */
+@keyframes fadeInUpAnimation {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDownAnimation {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeftAnimation {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRightAnimation {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutUpAnimation {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes fadeOutDownAnimation {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+@keyframes fadeOutLeftAnimation {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+}
+
+@keyframes fadeOutRightAnimation {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+}
+
+/* Animation Classes */
+.fade-in-up-animation {
+    animation: fadeInUpAnimation 0.6s ease-in-out;
+}
+
+.fade-in-down-animation {
+    animation: fadeInDownAnimation 0.6s ease-in-out;
+}
+
+.fade-in-left-animation {
+    animation: fadeInLeftAnimation 0.6s ease-in-out;
+}
+
+.fade-in-right-animation {
+    animation: fadeInRightAnimation 0.6s ease-in-out;
+}
+
+.fade-out-up-animation {
+    animation: fadeOutUpAnimation 0.5s ease-in-out 0.2s both;
+}
+
+.fade-out-down-animation {
+    animation: fadeOutDownAnimation 0.5s ease-in-out 0.2s both;
+}
+
+.fade-out-left-animation {
+    animation: fadeOutLeftAnimation 0.5s ease-in-out 0.2s both;
+}
+
+.fade-out-right-animation {
+    animation: fadeOutRightAnimation 0.5s ease-in-out 0.2s both;
+}
+

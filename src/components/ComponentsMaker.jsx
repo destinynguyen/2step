@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container } from './reused-ui/Container';
 import { GlowButton } from './reused-ui/GlowButton';
 import { FlexiText } from './reused-ui/FlexiText';
+import { Input } from './reused-ui/Input';
 import { NavButtons } from './reused-ui/NavButtons';
 // Import Flexi sprites from Assets folder
 import FlexiTeacher from '../assets/All Flexi Poses/SVG/Flexi_Teacher.svg';
@@ -19,6 +20,7 @@ const ComponentsMaker = () => {
         const [isStep3, setIsStep3] = useState(false);
         const [currentStepIndex, setCurrentStepIndex] = useState(0);
         const [showNavigationExample, setShowNavigationExample] = useState(false);
+        const [showInputExample, setShowInputExample] = useState(false);
         const [showFlexiCharacter, setShowFlexiCharacter] = useState(false);
         
         // Animation states
@@ -57,7 +59,7 @@ const ComponentsMaker = () => {
                         // Wait a bit, then show navigation area
                         setTimeout(() => {
                                 setShowNavigationExample(true);
-                                
+                                setShowInputExample(true);
                                 // Wait for navigation to appear, then show Flexi character
                                 setTimeout(() => {
                                         setShowFlexiCharacter(true);
@@ -124,6 +126,14 @@ const ComponentsMaker = () => {
                                                                 currentStepIndex={currentStepIndex}
                                                                 totalSteps={5}
                                                                 onNavigate={handleNavigate}
+                                                        />
+                                                </div>
+                                        )}
+                                        {showInputExample && (
+                                                <div className={`flex justify-center items-center min-h-[100px] w-50 bg-gray-200 rounded m-4 ${isNavigationFadingOut ? 'fade-out-down-animation' : 'fade-in-up-animation'}`}>
+                                                        <Input 
+                                                                placeholder="Default text"
+                                                                className="max-w-md"
                                                         />
                                                 </div>
                                         )}

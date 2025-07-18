@@ -5,6 +5,7 @@ import { GlowButton } from './reused-ui/GlowButton';
 import { FlexiText } from './reused-ui/FlexiText';
 // Import Flexi sprites from Assets folder
 import FlexiTeacher from '../assets/All Flexi Poses/SVG/Flexi_Teacher.svg';
+import FlexiWave from '../assets/All Flexi Poses/SVG/Flexi_Wave.svg';
 // Import animations from Animations folder
 import './reused-animations/fade.css';
 import './reused-animations/scale.css';
@@ -12,32 +13,47 @@ import './reused-animations/scale.css';
 // Render
 const ComponentsMaker = () => {
         // State management
-        const [firstButtonClicked, setFirstButtonClicked] = useState(false);
+        const [exploreButtonClicked, setExploreButtonClicked] = useState(false);
+        const [isStep2, setIsStep2] = useState(false);
 
         // Functions
         // Handle reset button click
         const handleResetButtonClick = () => {
-                setFirstButtonClicked(false);
+                setExploreButtonClicked(false);
+                setIsStep2(false);
         };
 
         // Handle first button click
-        const handleFirstButtonClick = () => {
-                setFirstButtonClicked(true);
+        const handleExploreButtonClick = () => {
+                setExploreButtonClicked(true);
+                setTimeout(() => {
+                        setIsStep2(true);
+                }, 1000);
         };
 
         return (
                 <Container text="Components Maker" showResetButton={true} onReset={handleResetButtonClick}>
+                        {/* Step 1: Into text */}
                         <FlexiText 
-                                className={firstButtonClicked ? 'fade-out-up-animation' : ''}
-                                flexiImage={FlexiTeacher}>
+                                className={exploreButtonClicked ? 'fade-out-up-animation' : ''}
+                                flexiImage={FlexiWave}>
                                 Welcome to the Components Maker!
                         </FlexiText>
                         <GlowButton 
-                                className={firstButtonClicked ? 'shrink-out-animation' : ''}
-                                onClick={handleFirstButtonClick}
+                                className={exploreButtonClicked ? 'shrink-out-animation' : ''}
+                                onClick={handleExploreButtonClick}
                         >
                                 <p>Click to Explore!</p>
                         </GlowButton>
+
+                        {/* Step 2: Test area */}
+                        {isStep2 && (
+                                <FlexiText 
+                                        className={isStep2 ? 'fade-in-down-animation' : ''}
+                                        flexiImage={FlexiTeacher}>
+                                        Above are the components you can make!
+                                </FlexiText>
+                        )}
                 </Container>
         )
 };

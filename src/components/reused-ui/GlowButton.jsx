@@ -13,6 +13,7 @@ export function GlowButton({
     isShrinking = false,
     isGrowing = false,
     autoShrinkOnClick = true,
+    bgColor = null,
     ...props 
 }) {
     const [isShrinkingOut, setIsShrinkingOut] = useState(false);
@@ -84,8 +85,11 @@ export function GlowButton({
         `glow-button simple-glow ${finalAnimationClasses}${shouldStopGlow ? ' stopped' : ''}` : 
         `glow-button ${finalAnimationClasses}`;
 
+    // Apply custom glow background color if provided
+    const glowStyle = bgColor ? { '--bgColor': bgColor } : {};
+
     return (
-        <div className={glowClasses} style={style}>
+        <div className={glowClasses} style={{ ...glowStyle, ...style }}>
             <button
                 className={buttonClasses}
                 onClick={handleClick}

@@ -38,7 +38,7 @@
     content: "";
     display: block;
     position: absolute;
-    background: #fff;
+    background: var(--bgColor, #fff);
     inset: 2px;
     border-radius: 4px;
     z-index: -2;

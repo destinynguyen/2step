@@ -5,7 +5,8 @@ export const NavButtons = ({
   totalSteps, 
   onNavigate, 
   showNavigation = true,
-  className = ""
+  className = "",
+  bgColor = null
 }) => {
   const canGoBack = currentStepIndex > 0;
   const canGoForward = currentStepIndex < totalSteps - 1;
@@ -34,7 +35,7 @@ export const NavButtons = ({
           cursor: default !important;
           position: relative;
           z-index: 2;
-          outline: 2px white solid;
+          outline: 2px var(--bgColor, white) solid;
         }
 
         .nav-button-orbit {
@@ -58,7 +59,7 @@ export const NavButtons = ({
           content: "";
           position: absolute;
           inset: 2px;
-          background: transparent;
+          background: var(--bgColor, transparent);
           border-radius: 50%;
           z-index: 0;
         }
@@ -92,6 +93,7 @@ export const NavButtons = ({
             opacity: canGoBack ? 1 : 0,
             pointerEvents: canGoBack ? 'auto' : 'none',
             transition: 'opacity 0.2s ease',
+            ...(bgColor && { '--bgColor': bgColor })
           }}
         >
           <div className="nav-button-orbit"></div>
@@ -106,6 +108,7 @@ export const NavButtons = ({
           <button
             onClick={() => handleNavigate('back')}
             className={`nav-button w-8 h-8 flex items-center justify-center rounded-full bg-[#008545]/20 text-[#008545] hover:bg-[#008545]/30 relative z-50`}
+            style={bgColor ? { '--bgColor': bgColor } : {}}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -140,6 +143,7 @@ export const NavButtons = ({
             opacity: canGoForward ? 1 : 0,
             pointerEvents: canGoForward ? 'auto' : 'none',
             transition: 'opacity 0.2s ease',
+            ...(bgColor && { '--bgColor': bgColor })
           }}
         >
           <div className="nav-button-orbit"></div>
@@ -154,6 +158,7 @@ export const NavButtons = ({
           <button
             onClick={() => handleNavigate('forward')}
             className={`nav-button w-8 h-8 flex items-center justify-center rounded-full bg-[#008545]/20 text-[#008545] hover:bg-[#008545]/30 relative z-50`}
+            style={bgColor ? { '--bgColor': bgColor } : {}}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 

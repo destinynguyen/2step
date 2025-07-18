@@ -90,9 +90,6 @@ const ComponentsMaker = () => {
                 }, 600); // Wait for text/button fade-out animations (0.5s + 0.1s buffer)
         };
 
-        const handleContinue2ButtonClick = () => {
-        };
-
         // Handle navigation
         const handleNavigate = (direction, newStepIndex) => {
                 setCurrentStepIndex(newStepIndex);

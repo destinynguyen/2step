@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../reused-animations/scale.css';
 import '../reused-animations/glow.css';
 
@@ -12,10 +12,18 @@ export function GlowButton({
     animate = true,
     isShrinking = false,
     isGrowing = false,
+    autoShrinkOnClick = true,
     ...props 
 }) {
+    const [isShrinkingOut, setIsShrinkingOut] = useState(false);
+
     const handleClick = (e) => {
         if (disabled) return;
+        
+        // Auto-shrink on click if enabled
+        if (autoShrinkOnClick && animate) {
+            setIsShrinkingOut(true);
+        }
         
         if (onClick) {
             onClick(e);
@@ -40,11 +48,20 @@ export function GlowButton({
 
     const baseClasses = `
         relative select-none transition-colors duration-200
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${disabled ? 'opacity-50' : 'cursor-pointer'}
     `;
 
-    const buttonAnimationClasses = animate ? 
-        (isShrinking ? 'shrink-animation' : isGrowing ? 'continue-animation' : '') : '';
+    // Determine which animation to apply
+    let buttonAnimationClasses = '';
+    if (animate) {
+        if (isShrinkingOut) {
+            buttonAnimationClasses = 'shrink-out-animation';
+        } else if (isShrinking) {
+            buttonAnimationClasses = 'shrink-animation';
+        } else if (isGrowing) {
+            buttonAnimationClasses = 'continue-animation';
+        }
+    }
 
     const buttonClasses = `
         ${baseClasses}
@@ -57,9 +74,15 @@ export function GlowButton({
         ${nonAnimationClasses}
     `;
 
+    // Apply shrink animation to glow container as well, but not grow-in animations
+    const finalAnimationClasses = isShrinkingOut ? 'shrink-out-animation' : animationClasses;
+    
+    // Only stop glow for shrink animations, not grow-in animations
+    const shouldStopGlow = finalAnimationClasses && !animationClasses.includes('continue-animation');
+    
     const glowClasses = showGlow ? 
-        `glow-button simple-glow ${animationClasses}${animationClasses ? ' stopped' : ''}` : 
-        `glow-button ${animationClasses}`;
+        `glow-button simple-glow ${finalAnimationClasses}${shouldStopGlow ? ' stopped' : ''}` : 
+        `glow-button ${finalAnimationClasses}`;
 
     return (
         <div className={glowClasses} style={style}>

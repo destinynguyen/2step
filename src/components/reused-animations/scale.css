@@ -1,5 +1,4 @@
 /* Scale Animations */
-
 @keyframes shrinkOutAnimation {
     from {
         transform: scale(1);

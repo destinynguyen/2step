@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import Xarrow from 'react-xarrows';
+import React, { useState, useRef, useEffect } from 'react';
 import { Container } from '../components/reused-ui/Container';
 import { GlowButton } from '../components/reused-ui/GlowButton';
 
@@ -8,6 +7,52 @@ export function Step2({ expression, onNext, onBack, onReset }) {
     firstComplete: false,
     secondComplete: false
   });
+
+  const [arrowPaths, setArrowPaths] = useState({
+    path1: "M 0 0 Q 0 0 0 0",
+    path2: "M 0 0 Q 0 0 0 0"
+  });
+
+  const coefficientRef = useRef(null);
+  const box1Ref = useRef(null);
+  const box2Ref = useRef(null);
+
+  const calculateArrowPaths = () => {
+    if (!coefficientRef.current || !box1Ref.current || !box2Ref.current) return;
+
+    const coefficient = coefficientRef.current.getBoundingClientRect();
+    const box1 = box1Ref.current.getBoundingClientRect();
+    const box2 = box2Ref.current.getBoundingClientRect();
+    const container = coefficientRef.current.parentElement.getBoundingClientRect();
+
+    // Calculate relative positions
+    const startX = coefficient.left - container.left + coefficient.width / 2;
+    const startY = coefficient.top - container.top;
+    
+    const end1X = box1.left - container.left;
+    const end1Y = box1.top - container.top;
+    
+    const end2X = box2.left - container.left;
+    const end2Y = box2.top - container.top;
+
+    // Create curved paths with projectile motion
+    const control1X = startX + (end1X - startX) / 2;
+    const control1Y = startY - 40; // Higher curve
+    
+    const control2X = startX + (end2X - startX) / 2;
+    const control2Y = startY - 40; // Higher curve
+
+    setArrowPaths({
+      path1: `M ${startX} ${startY} Q ${control1X} ${control1Y} ${end1X} ${end1Y}`,
+      path2: `M ${startX} ${startY} Q ${control2X} ${control2Y} ${end2X} ${end2Y}`
+    });
+  };
+
+  useEffect(() => {
+    calculateArrowPaths();
+    window.addEventListener('resize', calculateArrowPaths);
+    return () => window.removeEventListener('resize', calculateArrowPaths);
+  }, [distributionState]);
 
   const handleDistributeToB = () => {
     if (!distributionState.firstComplete) {
@@ -49,16 +94,13 @@ export function Step2({ expression, onNext, onBack, onReset }) {
             Click the arrows to distribute {expression.a} across the expression
           </p>
           
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 md:p-6 mb-4 md:mb-6">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 md:p-6 mb-4 md:mb-6 relative overflow-visible">
             <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-4 md:mb-6 relative">
               <div className="relative inline-block">
-                {/* Invisible elements above the coefficient for arrow start points */}
-                <div id="arrow-start-1" className="absolute -top-8 left-0 w-1 h-1"></div>
-                <div id="arrow-start-2" className="absolute -top-8 left-0 w-1 h-1"></div>
-                
-                <span className="text-red-600" id="coefficient">{expression.a}</span>
+                <span ref={coefficientRef} className="text-red-600" id="coefficient">{expression.a}</span>
                 <span className="text-blue-600">(</span>
                 <span 
+                  ref={box1Ref}
                   id="number-b"
                   className={`inline-block px-2 py-1 border-2 border-dashed rounded cursor-pointer transition-all ${
                     distributionState.firstComplete 
@@ -71,6 +113,7 @@ export function Step2({ expression, onNext, onBack, onReset }) {
                 </span>
                 <span className="text-blue-600"> + </span>
                 <span 
+                  ref={box2Ref}
                   id="number-c"
                   className={`inline-block px-2 py-1 border-2 border-dashed rounded cursor-pointer transition-all ${
                     distributionState.secondComplete 
@@ -83,31 +126,40 @@ export function Step2({ expression, onNext, onBack, onReset }) {
                 </span>
                 <span className="text-blue-600">)</span>
                 
-                <Xarrow
-                  start="arrow-start-1"
-                  end="number-b"
-                  color="#3B82F6"
-                  strokeWidth={2}
-                  headSize={8}
-                  path="smooth"
-                  curveness={0.8}
-                  endAnchor="top"
-                  _cpx1Offset={30}
-                  _cpy1Offset={-40}
-                />
-                
-                <Xarrow
-                  start="arrow-start-2"
-                  end="number-c"
-                  color="#3B82F6"
-                  strokeWidth={2}
-                  headSize={8}
-                  path="smooth"
-                  curveness={0.8}
-                  endAnchor="top"
-                  _cpx1Offset={-30}
-                  _cpy1Offset={-40}
-                />
+                {/* Dynamic SVG arrows */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 10, overflow: 'visible' }}>
+                  <path
+                    d={arrowPaths.path1}
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    fill="none"
+                    markerEnd="url(#arrowhead)"
+                  />
+                  
+                  <path
+                    d={arrowPaths.path2}
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    fill="none"
+                    markerEnd="url(#arrowhead)"
+                  />
+                  
+                  <defs>
+                    <marker
+                      id="arrowhead"
+                      markerWidth="10"
+                      markerHeight="7"
+                      refX="9"
+                      refY="3.5"
+                      orient="auto"
+                    >
+                      <polygon
+                        points="0 0, 10 3.5, 0 7"
+                        fill="#3B82F6"
+                      />
+                    </marker>
+                  </defs>
+                </svg>
               </div>
             </div>
             

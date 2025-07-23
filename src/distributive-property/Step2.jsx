@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Xarrow from 'react-xarrows';
 import { Container } from '../components/reused-ui/Container';
 import { GlowButton } from '../components/reused-ui/GlowButton';
 
@@ -50,68 +51,60 @@ export function Step2({ expression, onNext, onBack, onReset }) {
           </p>
           
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
-            <div className="text-3xl font-bold text-blue-600 mb-6">
-              {expression.expression}
-            </div>
-            
-            {/* Visual arrows and distribution targets */}
-            <div className="relative flex justify-center items-center space-x-12 mb-6">
-              {/* First arrow and target */}
-              <div className="text-center">
-                <div className="relative">
-                  {/* Arrow pointing down */}
-                  <div className="w-0.5 h-8 bg-blue-400 mx-auto mb-2 relative">
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-400"></div>
-                  </div>
-                  
-                  {/* Distribution target */}
-                  <div 
-                    className={`w-16 h-16 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all ${
-                      distributionState.firstComplete 
-                        ? 'border-green-500 bg-green-100' 
-                        : 'border-blue-400'
-                    }`}
-                    onClick={handleDistributeToB}
-                  >
-                    {distributionState.firstComplete ? (
-                      <span className="text-lg font-bold text-green-600">
-                        {expression.a}×{expression.b}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-blue-600">Click here</span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">First</p>
-              </div>
-              
-              {/* Second arrow and target */}
-              <div className="text-center">
-                <div className="relative">
-                  {/* Arrow pointing down */}
-                  <div className="w-0.5 h-8 bg-blue-400 mx-auto mb-2 relative">
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-400"></div>
-                  </div>
-                  
-                  {/* Distribution target */}
-                  <div 
-                    className={`w-16 h-16 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all ${
-                      distributionState.secondComplete 
-                        ? 'border-green-500 bg-green-100' 
-                        : 'border-blue-400'
-                    }`}
-                    onClick={handleDistributeToC}
-                  >
-                    {distributionState.secondComplete ? (
-                      <span className="text-lg font-bold text-green-600">
-                        {expression.a}×{expression.c}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-blue-600">Click here</span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Second</p>
+            <div className="text-3xl font-bold text-blue-600 mb-6 relative">
+              {/* Expression with curved arrows pointing to numbers */}
+              <div className="relative inline-block">
+                <span className="text-red-600" id="coefficient">{expression.a}</span>
+                <span className="text-blue-600">(</span>
+                <span 
+                  id="number-b"
+                  className={`inline-block px-2 py-1 border-2 border-dashed rounded cursor-pointer transition-all ${
+                    distributionState.firstComplete 
+                      ? 'border-green-500 bg-green-100' 
+                      : 'border-blue-400'
+                  }`}
+                  onClick={handleDistributeToB}
+                >
+                  {distributionState.firstComplete ? `${expression.a}×${expression.b}` : expression.b}
+                </span>
+                <span className="text-blue-600"> + </span>
+                <span 
+                  id="number-c"
+                  className={`inline-block px-2 py-1 border-2 border-dashed rounded cursor-pointer transition-all ${
+                    distributionState.secondComplete 
+                      ? 'border-green-500 bg-green-100' 
+                      : 'border-blue-400'
+                  }`}
+                  onClick={handleDistributeToC}
+                >
+                  {distributionState.secondComplete ? `${expression.a}×${expression.c}` : expression.c}
+                </span>
+                <span className="text-blue-600">)</span>
+                
+                {/* Curved arrows pointing to the actual numbers */}
+                <Xarrow
+                  start="coefficient"
+                  end="number-b"
+                  color="#3B82F6"
+                  strokeWidth={2}
+                  headSize={8}
+                  path="smooth"
+                  curveness={0.8}
+                  showHead={true}
+                  showTail={false}
+                />
+                
+                <Xarrow
+                  start="coefficient"
+                  end="number-c"
+                  color="#3B82F6"
+                  strokeWidth={2}
+                  headSize={8}
+                  path="smooth"
+                  curveness={0.8}
+                  showHead={true}
+                  showTail={false}
+                />
               </div>
             </div>
             

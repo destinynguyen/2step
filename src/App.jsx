@@ -1,14 +1,12 @@
 import React from 'react';
-import ComponentsMaker from './components/ComponentsMaker'
-
+import { Step1 } from './distributive-property/Step1';
 
 function App() {
   return (
       <div className="App">
-        <ComponentsMaker />
+        <Step1 />
       </div>
   );
 }
-
 
 export default App;

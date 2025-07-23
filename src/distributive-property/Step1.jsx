@@ -1,27 +1,13 @@
-import React, { useState } from 'react';
-import { generateDistributiveExpression } from './utils';
+import React from 'react';
 import { Container } from '../components/reused-ui/Container';
 import { GlowButton } from '../components/reused-ui/GlowButton';
 
-export function Step1() {
-  // Pre-generate the expression by default
-  const [expression, setExpression] = useState(generateDistributiveExpression());
-
-  const handleNext = () => {
-    console.log('Moving to next step');
-    // This will be handled by parent component
-  };
-
-  const handleReset = () => {
-    // Generate a new random expression
-    setExpression(generateDistributiveExpression());
-  };
-
+export function Step1({ expression, onNext, onReset }) {
   return (
     <Container 
       text="Distributive Property - Step 1" 
       showResetButton={true}
-      onReset={handleReset}
+      onReset={onReset}
     >
       <div className="flex flex-col items-center justify-center h-full space-y-6">
         <div className="text-center">
@@ -47,7 +33,7 @@ export function Step1() {
         </div>
         
         <div className="absolute bottom-4 right-4">
-          <GlowButton onClick={handleNext}>
+          <GlowButton onClick={onNext}>
             Next →
           </GlowButton>
         </div>

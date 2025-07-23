@@ -1,10 +1,10 @@
 import React from 'react';
-import { Step1 } from './distributive-property/Step1';
+import { DistributiveProperty } from './distributive-property/DistributiveProperty';
 
 function App() {
   return (
       <div className="App">
-        <Step1 />
+        <DistributiveProperty />
       </div>
   );
 }

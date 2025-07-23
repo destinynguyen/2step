@@ -1,56 +1,22 @@
-# Component Library
+# distributive_property
 
-Simple reusable components for interactive content.
+## Overview
 
-## Components
+This interactive will show students how the distributive property works in a very visual and animated way. Students should be able to navigate between steps with `<` and `>` buttons.
 
-### Container
-A basic container with header text and optional reset button.
+## How it Works
 
-```jsx
-import { Container } from './components/ui/Container';
+### Step 1
 
-<Container text="Title" showResetButton={true} onReset={handleReset}>
-  Your content here
-</Container>
-```
+A random expression that follows the format `a(b + c)` is shown. `a`, `b`, and `c` should only be natural numbers.
 
-### FlexiText
-A speech bubble with a character image and curved arrow.
+### Step 2
 
-```jsx
-import { FlexiText } from './components/ui/FlexiText';
+Next arrows will appear to distribute `a` across `b` and `c`. The student is able to drag `a` across these arrows (once each).
+As `a` is being dragged, it shows up as `a ×`. Once its dragged to its destination, those parts of the expression will update to `a×b` and `a×c` respectively.
+After the second `a` has begun to be moved, the `a` at the beginning of the expression can finally hide.
 
-<FlexiText>
-  Hello! This is a speech bubble.
-</FlexiText>
-```
+### Step 3
 
-### GlowButton
-A button with glow animation effects.
-
-```jsx
-import { GlowButton } from './components/ui/GlowButton';
-
-<GlowButton onClick={handleClick}>
-  Click me
-</GlowButton>
-```
-
-## Props to pass down
-
-### Container
-- `text` - Header text
-- `showResetButton` - Show reset button (boolean)
-- `onReset` - Reset function
-- `children` - Content
-
-### FlexiText
-- `children` - Speech bubble text
-- `showBubble` - Show speech bubble (boolean)
-- `flexiImage` - Character image
-
-### GlowButton
-- `children` - Button text
-- `onClick` - Click handler
-- `disabled` - Disable button (boolean)
+The numbers will automatically animate to do their respective multiplications.
+Once the multiplication is done, it's complete! No need to perform the addition.

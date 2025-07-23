@@ -6,8 +6,7 @@ import { GlowButton } from '../components/reused-ui/GlowButton';
 export function Step2({ expression, onNext, onBack, onReset }) {
   const [distributionState, setDistributionState] = useState({
     firstComplete: false,
-    secondComplete: false,
-    isDragging: false
+    secondComplete: false
   });
 
   const handleDistributeToB = () => {
@@ -29,7 +28,7 @@ export function Step2({ expression, onNext, onBack, onReset }) {
   };
 
   const handleStepReset = () => {
-    setDistributionState({ firstComplete: false, secondComplete: false, isDragging: false });
+    setDistributionState({ firstComplete: false, secondComplete: false });
     onReset();
   };
 
@@ -41,19 +40,22 @@ export function Step2({ expression, onNext, onBack, onReset }) {
       showResetButton={true}
       onReset={handleStepReset}
     >
-      <div className="flex flex-col items-center justify-center h-full space-y-6 pb-20">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#5750E3] mb-4">
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-4 space-y-4">
+        <div className="text-center w-full max-w-md">
+          <h2 className="text-xl md:text-2xl font-bold text-[#5750E3] mb-3 md:mb-4">
             Distribute the Number
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 px-2">
             Click the arrows to distribute {expression.a} across the expression
           </p>
           
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
-            <div className="text-3xl font-bold text-blue-600 mb-6 relative">
-              {/* Expression with curved arrows pointing to numbers */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 md:p-6 mb-4 md:mb-6">
+            <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-4 md:mb-6 relative">
               <div className="relative inline-block">
+                {/* Invisible elements above the coefficient for arrow start points */}
+                <div id="arrow-start-1" className="absolute -top-8 left-0 w-1 h-1"></div>
+                <div id="arrow-start-2" className="absolute -top-8 left-0 w-1 h-1"></div>
+                
                 <span className="text-red-600" id="coefficient">{expression.a}</span>
                 <span className="text-blue-600">(</span>
                 <span 
@@ -81,35 +83,35 @@ export function Step2({ expression, onNext, onBack, onReset }) {
                 </span>
                 <span className="text-blue-600">)</span>
                 
-                {/* Curved arrows pointing to the actual numbers */}
                 <Xarrow
-                  start="coefficient"
+                  start="arrow-start-1"
                   end="number-b"
                   color="#3B82F6"
                   strokeWidth={2}
                   headSize={8}
                   path="smooth"
                   curveness={0.8}
-                  showHead={true}
-                  showTail={false}
+                  endAnchor="top"
+                  _cpx1Offset={30}
+                  _cpy1Offset={-40}
                 />
                 
                 <Xarrow
-                  start="coefficient"
+                  start="arrow-start-2"
                   end="number-c"
                   color="#3B82F6"
                   strokeWidth={2}
                   headSize={8}
                   path="smooth"
                   curveness={0.8}
-                  showHead={true}
-                  showTail={false}
+                  endAnchor="top"
+                  _cpx1Offset={-30}
+                  _cpy1Offset={-40}
                 />
               </div>
             </div>
             
-            {/* Instructions */}
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-xs md:text-sm text-gray-600 px-2">
               {!distributionState.firstComplete && "Click the first arrow to distribute to " + expression.b}
               {distributionState.firstComplete && !distributionState.secondComplete && "Now click the second arrow to distribute to " + expression.c}
               {distributionState.firstComplete && distributionState.secondComplete && "✓ Distribution complete!"}
@@ -118,8 +120,7 @@ export function Step2({ expression, onNext, onBack, onReset }) {
         </div>
       </div>
       
-      {/* Navigation buttons positioned outside the main content */}
-      <div className="absolute bottom-4 right-4 flex space-x-3">
+      <div className="absolute bottom-2 md:bottom-4 right-2 md:right-4 flex space-x-2 md:space-x-3">
         <GlowButton onClick={onBack}>
           ← Back
         </GlowButton>

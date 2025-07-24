@@ -28,9 +28,8 @@ export function generateTwoStepEquation() {
   const b = Math.floor(Math.random() * 21) - 10; // -10 to 10
   const c = Math.floor(Math.random() * 21) - 10; // -10 to 10
   
-  // Generate a coefficient a that can be an integer or fraction with numerator 1
+  // Generate a coefficient a that is always a fraction with numerator 1
   const aOptions = [
-    { value: 1, type: 'integer' },
     { value: 1/2, type: 'fraction', denominator: 2 },
     { value: 1/3, type: 'fraction', denominator: 3 },
     { value: 1/4, type: 'fraction', denominator: 4 },

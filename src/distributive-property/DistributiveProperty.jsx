@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { generateDistributiveExpression } from './utils';
+import { generateTwoStepEquation } from './utils';
 import { Step1 } from './Step1';
 import { Step2 } from './Step2';
 
 export function DistributiveProperty() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [expression, setExpression] = useState(generateDistributiveExpression());
+  const [expression, setExpression] = useState(generateTwoStepEquation());
 
   const handleNext = () => {
     setCurrentStep(prev => prev + 1);
@@ -17,7 +17,7 @@ export function DistributiveProperty() {
 
   const handleReset = () => {
     setCurrentStep(1);
-    setExpression(generateDistributiveExpression());
+    setExpression(generateTwoStepEquation());
   };
 
   const renderCurrentStep = () => {

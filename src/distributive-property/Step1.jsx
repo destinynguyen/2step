@@ -1,35 +1,37 @@
 import React from 'react';
 import { Container } from '../components/reused-ui/Container';
 import { GlowButton } from '../components/reused-ui/GlowButton';
+import { generateTwoStepEquation } from './utils';
 
 export function Step1({ expression, onNext, onReset }) {
+  // Generate a two-step equation if expression is not provided
+  const equation = expression || generateTwoStepEquation();
+
   return (
     <Container 
-      text="Distributive Property - Step 1" 
+      text="Two Step Equation" 
       showResetButton={true}
       onReset={onReset}
     >
-      <div className="flex flex-col items-center justify-center h-full space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#5750E3] mb-4">
-            Distributive Property
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Let's learn how to distribute a number across an expression!
-          </p>
-          
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Our expression:</p>
-            <div className="text-3xl font-bold text-blue-600">
-              {expression.expression}
-            </div>
-          </div>
-          
-          <p className="text-gray-700 text-sm">
-            We need to distribute <span className="font-bold text-blue-600">{expression.a}</span> 
-            across <span className="font-bold text-blue-600">{expression.b}</span> and 
-            <span className="font-bold text-blue-600"> {expression.c}</span>
-          </p>
+      <div className="flex items-center justify-center w-full" style={{ minHeight: '420px' }}>
+        <div className="text-3xl font-bold text-blue-600 flex items-center">
+          {equation.aType === 'integer' ? (
+            equation.a === 1 ? (
+              <span>x</span>
+            ) : equation.a === -1 ? (
+              <span>-x</span>
+            ) : (
+              <span>{equation.a}x</span>
+            )
+          ) : (
+            <span className="flex flex-col items-center">
+              <span>x</span>
+              <span className="border-t border-blue-600 w-full text-center">{equation.denominator}</span>
+            </span>
+          )}
+          <span className="ml-2">{equation.b >= 0 ? '+' : ''}{equation.b}</span>
+          <span className="ml-2">=</span>
+          <span className="ml-2">{equation.c}</span>
         </div>
         
         <div className="absolute bottom-4 right-4">

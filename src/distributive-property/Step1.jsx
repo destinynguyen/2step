@@ -6,6 +6,8 @@ import flexiConfident from '../assets/Fleximojis/Flexi_Confident.png';
 
 // Animation for striking through cancelled terms
 import '../components/reused-animations/strike.css';
+import '../components/reused-animations/scale.css'; // retain in case used elsewhere but fade animation will be used instead
+import '../components/reused-animations/shift.css'; // for slide-right-fill
 
 export function Step1({ expression, onNext, onReset }) {
   // Generate a two-step equation if expression is not provided
@@ -19,6 +21,11 @@ export function Step1({ expression, onNext, onReset }) {
     hasCrossed: false,
     placedRight: false
   });
+
+  // Additional animation flags
+  const [vanishLeft, setVanishLeft] = useState(false); // start fading out left terms
+  const [leftRemoved, setLeftRemoved] = useState(false); // actually remove the spans after animation
+  const [shiftFill, setShiftFill] = useState(false);   // shift x fraction to the right
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
@@ -81,6 +88,32 @@ export function Step1({ expression, onNext, onReset }) {
       placedRight: prev.hasCrossed ? true : false
     }));
   };
+
+  // Orchestrate post-placement animations: strike-through (already handled by CSS delay),
+  // then vanish, then slide right.
+  useEffect(() => {
+    if (dragState.placedRight) {
+      // 0.7 s strike-through delay – start vanishing as soon as line begins drawing
+      const vanishTimer = setTimeout(() => {
+        setVanishLeft(true);
+        // schedule removal after shrink-out duration (0.5s)
+        setTimeout(() => setLeftRemoved(true), 500);
+      }, 700);
+
+      // shift x fraction right after grey terms fully gone
+      const slideTimer  = setTimeout(() => setShiftFill(true), 700 + 500);
+
+      return () => {
+        clearTimeout(vanishTimer);
+        clearTimeout(slideTimer);
+      };
+    } else {
+      // Reset flags when interaction resets
+      setVanishLeft(false);
+      setLeftRemoved(false);
+      setShiftFill(false);
+    }
+  }, [dragState.placedRight]);
   
   useEffect(() => {
     const handleDocumentMouseMove = (e) => {
@@ -122,31 +155,33 @@ export function Step1({ expression, onNext, onReset }) {
           className={`text-3xl font-bold text-[#5750E3] flex items-center select-text ${messageIndex === 1 ? 'cursor-grab' : ''}`}
           onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
         >
-          <span className="flex flex-col items-center">
+          <span className={`flex flex-col items-center relative ${shiftFill ? 'slide-right-fill' : ''}`}>  
             <span>x</span>
             <span className="border-t border-[#5750E3] w-full text-center">{equation.denominator}</span>
           </span>
                       <span className="relative inline-block ml-2">
-              {/* Original term */}
-              <span
-                className={`${messageIndex === 1 && !dragState.placedRight ? 'glow-highlight cursor-grab' : ''} ${dragState.isDragging ? 'cursor-grabbing opacity-0' : ''}`}
-                style={messageIndex === 1 && !dragState.placedRight ? {
-                  textShadow: '0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'
-                } : {}}
-                onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
-              >
-                {equation.b >= 0 ? '+' : ''}{equation.b}
-              </span>
+              {/* Original term (purple). Hide after placement */}
+              {!leftRemoved && (
+                <span
+                  className={`${messageIndex === 1 && !dragState.placedRight ? 'glow-highlight cursor-grab' : ''} ${dragState.isDragging ? 'cursor-grabbing opacity-0' : ''} ${dragState.placedRight ? (vanishLeft ? 'fade-out-left-animation' : '') : ''}`}
+                  style={messageIndex === 1 && !dragState.placedRight ? {
+                    textShadow: '0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'
+                  } : {}}
+                  onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
+                >
+                  {equation.b >= 0 ? '+' : ''}{equation.b}
+                </span>
+              )}
 
               {/* Ghost left (overlays original spot) */}
-              {dragState.showGhostLeft && (
-                <span className={`absolute inset-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''}`}>                
+              {dragState.showGhostLeft && !leftRemoved && (
+                <span className={`absolute inset-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''} ${vanishLeft ? 'fade-out-left-animation' : ''}`}>                
                   {equation.b >= 0 ? '+' : ''}{equation.b}
                 </span>
               )}
               {/* Cancellation pair on left once crossed */}
-              {dragState.hasCrossed && (
-                <span className={`absolute left-0 right-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''}`} style={{ top: '100%' }}>
+              {dragState.hasCrossed && !leftRemoved && (
+                <span className={`absolute left-0 right-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''} ${vanishLeft ? 'fade-out-left-animation' : ''}`} style={{ top: '100%' }}>
                   {equation.b >= 0 ? '-' : '+'}{Math.abs(equation.b)}
                 </span>
               )}

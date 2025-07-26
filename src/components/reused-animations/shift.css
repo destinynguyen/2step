@@ -1,0 +1,13 @@
+/* Slide-right animation used after the left-side terms cancel out */
+@keyframes slideRightFill {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(0.7rem); /* requested distance */
+  }
+}
+
+.slide-right-fill {
+  animation: slideRightFill 0.4s ease forwards;
+} 

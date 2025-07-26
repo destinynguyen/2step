@@ -4,6 +4,9 @@ import { GlowButton } from '../components/reused-ui/GlowButton';
 import { generateTwoStepEquation } from './utils';
 import flexiConfident from '../assets/Fleximojis/Flexi_Confident.png';
 
+// Animation for striking through cancelled terms
+import '../components/reused-animations/strike.css';
+
 export function Step1({ expression, onNext, onReset }) {
   // Generate a two-step equation if expression is not provided
   const equation = expression || generateTwoStepEquation();
@@ -12,9 +15,12 @@ export function Step1({ expression, onNext, onReset }) {
   const [dragState, setDragState] = useState({
     isDragging: false,
     position: { x: 0, y: 0 },
-    showGhostLeft: false
+    showGhostLeft: false,
+    hasCrossed: false,
+    placedRight: false
   });
   const containerRef = useRef(null);
+  const equalsRef = useRef(null);
   
   const flexiMessages = [
     "Let's work together to solve this two-step equation!",
@@ -40,7 +46,9 @@ export function Step1({ expression, onNext, onReset }) {
     setDragState({
       isDragging: true,
       position: { x: relX, y: relY },
-      showGhostLeft: true
+      showGhostLeft: true,
+      hasCrossed: false,
+      placedRight: false
     });
   };
   
@@ -50,6 +58,13 @@ export function Step1({ expression, onNext, onReset }) {
     const rect = containerRef.current.getBoundingClientRect();
     const relX = e.clientX - rect.left;
     const relY = e.clientY - rect.top;
+    // crossing detection
+    if (!dragState.hasCrossed && equalsRef.current){
+      const eqRect = equalsRef.current.getBoundingClientRect();
+      if(e.clientX > eqRect.left){
+        setDragState(prev=>({...prev,hasCrossed:true}));
+      }
+    }
 
     setDragState(prev => ({
       ...prev,
@@ -58,11 +73,13 @@ export function Step1({ expression, onNext, onReset }) {
   };
   
   const handleDragEnd = () => {
-    setDragState({
+    setDragState(prev=>({
       isDragging: false,
       position: { x: 0, y: 0 },
-      showGhostLeft: false
-    });
+      showGhostLeft: true,            // keep grey +b
+      hasCrossed: prev.hasCrossed,    // retain to keep grey -b under +b
+      placedRight: prev.hasCrossed ? true : false
+    }));
   };
   
   useEffect(() => {
@@ -112,8 +129,8 @@ export function Step1({ expression, onNext, onReset }) {
                       <span className="relative inline-block ml-2">
               {/* Original term */}
               <span
-                className={`${messageIndex === 1 ? 'glow-highlight cursor-grab' : ''} ${dragState.isDragging ? 'cursor-grabbing opacity-0' : ''}`}
-                style={messageIndex === 1 ? {
+                className={`${messageIndex === 1 && !dragState.placedRight ? 'glow-highlight cursor-grab' : ''} ${dragState.isDragging ? 'cursor-grabbing opacity-0' : ''}`}
+                style={messageIndex === 1 && !dragState.placedRight ? {
                   textShadow: '0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'
                 } : {}}
                 onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
@@ -123,17 +140,29 @@ export function Step1({ expression, onNext, onReset }) {
 
               {/* Ghost left (overlays original spot) */}
               {dragState.showGhostLeft && (
-                <span className="absolute inset-0 text-gray-400 pointer-events-none flex items-center justify-center">
+                <span className={`absolute inset-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''}`}>                
                   {equation.b >= 0 ? '+' : ''}{equation.b}
                 </span>
               )}
+              {/* Cancellation pair on left once crossed */}
+              {dragState.hasCrossed && (
+                <span className={`absolute left-0 right-0 text-gray-400 pointer-events-none flex items-center justify-center ${dragState.placedRight ? 'strike-through' : ''}`} style={{ top: '100%' }}>
+                  {equation.b >= 0 ? '-' : '+'}{Math.abs(equation.b)}
+                </span>
+              )}
             </span>
-          <span className="ml-2">=</span>
-                      <span className="ml-2">{equation.c}</span>
+          <span className="ml-2" ref={equalsRef}>=</span>
+          <span className="ml-2">{equation.c}</span>
+             {/* Right side placeholder or placed term */}
+             {dragState.placedRight ? (
+               <span className="ml-2 text-[#5750E3]">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
+             ) : dragState.hasCrossed ? (
+               <span className="ml-2 text-gray-400">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
+             ) : null}
           </div>
           
           {/* Dragged element */}
-          {dragState.isDragging && (
+          {dragState.isDragging && !dragState.placedRight && (
             <div 
               className="absolute pointer-events-none text-3xl font-bold text-[#5750E3]"
               style={{
@@ -142,7 +171,7 @@ export function Step1({ expression, onNext, onReset }) {
                 zIndex: 1000
               }}
             >
-              {equation.b >= 0 ? '+' : ''}{equation.b}
+              {dragState.hasCrossed ? (equation.b>=0?'-':'+')+Math.abs(equation.b) : (equation.b>=0?'+':'')+equation.b}
             </div>
           )}
         

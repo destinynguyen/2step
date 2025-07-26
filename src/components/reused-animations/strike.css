@@ -1,0 +1,27 @@
+/* Strike-through Animation */
+@keyframes strikeThroughAnimation {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Apply strike-through using a pseudo-element so the original text remains readable */
+.strike-through {
+  /* Preserve existing positioning from other utility classes (absolute/relative etc.) */
+}
+
+.strike-through::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2px;
+  background-color: #ef4444; /* Tailwind red-500 */
+  width: 0;
+  animation: strikeThroughAnimation 0.35s ease forwards;
+  animation-delay: 0.7s;
+} 

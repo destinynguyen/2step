@@ -37,6 +37,12 @@ export function Step1({ expression, onNext, onReset }) {
     hasCrossed:false,
     placedRight:false
   });
+
+  // vanish grey left multiplication once denominator placed
+  const [leftDenomVanished, setLeftDenomVanished] = useState(false);
+
+  // multiplication simplify stage: 0 none, 1 glow, 2 fade, 3 final result
+  const [multStage, setMultStage] = useState(0);
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
@@ -133,6 +139,24 @@ export function Step1({ expression, onNext, onReset }) {
     }));
   };
 
+  // when denominator placed, schedule left grey terms to vanish
+  useEffect(()=>{
+     if(denomDrag.placedRight){
+        const t=setTimeout(()=>setLeftDenomVanished(true),900); // start fade after 0.9s
+
+        // sequence for right-side multiplication simplification
+        const start=900+900; // wait for vanish complete (fade takes 0.9s)
+        const g=setTimeout(()=>setMultStage(1),start);           // glow both terms
+        const f=setTimeout(()=>setMultStage(2),start+400);       // fade
+        const r=setTimeout(()=>setMultStage(3),start+700);       // show product
+
+        return ()=>{clearTimeout(t);clearTimeout(g);clearTimeout(f);clearTimeout(r);}  
+     }else{
+        setLeftDenomVanished(false);
+        setMultStage(0);
+     }
+  },[denomDrag.placedRight]);
+
   useEffect(()=>{
     if(!denomDrag.isDragging) return;
     const move=(e)=>moveDenomDrag(e);
@@ -220,11 +244,12 @@ export function Step1({ expression, onNext, onReset }) {
         >
           <span className={`flex flex-col items-center relative ${shiftFill ? 'slide-right-fill' : ''}`}>  
             <span>x</span>
+            {!leftDenomVanished && (
             <span 
-              className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''}`}
+              className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''} ${leftDenomVanished? 'fade-out-left-slow':''}`}
               style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'}:{}}
               onMouseDown={startDenomDrag}
-            >{equation.denominator}</span>
+            >{equation.denominator}</span>) }
           </span>
                       <span className="relative inline-block ml-2">
               {/* Original term (purple). Hide after placement */}
@@ -254,8 +279,8 @@ export function Step1({ expression, onNext, onReset }) {
               )}
             </span>
           {/* Show ×a on left once denominator placed */}
-          {denomDrag.placedRight && (
-            <span className="ml-2 text-gray-400">×{equation.denominator}</span>
+          {denomDrag.placedRight && !leftDenomVanished && (
+            <span className={`ml-2 text-gray-400 ${leftDenomVanished? 'fade-out-left-slow':''}`}>×{equation.denominator}</span>
           )}
 
           <span className="ml-2" ref={equalsRef}>=</span>
@@ -278,14 +303,19 @@ export function Step1({ expression, onNext, onReset }) {
               <span className="ml-2 text-gray-400">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
             ) : null}
 
-            {/* result */}
-            {rightStage===3 && (
-              <span className="inline-block pop-in text-[#5750E3]">{equation.c - equation.b}</span>
+            {/* result of addition stage */}
+            {rightStage===3 && multStage<2 && (
+              <span className={`inline-block ${multStage===1?'glow-scale':''} ${multStage===2?'quick-fade-out':''}`}>{equation.c - equation.b}</span>
             )}
 
-            {/* ×a on right when placed (render after result) */}
-            {denomDrag.placedRight && (
-              <span className="text-[#5750E3]">×{equation.denominator}</span>
+            {/* ×a placed to the right of current term */}
+            {denomDrag.placedRight && multStage < 2 && (
+              <span className={`ml-1 text-[#5750E3] ${multStage===1?'glow-scale':''}`}>×{equation.denominator}</span>
+            )}
+
+            {/* product result */}
+            {multStage===3 && (
+              <span className="inline-block pop-in text-[#5750E3]">{(equation.c - equation.b)*equation.denominator}</span>
             )}
           </span>
           </div>

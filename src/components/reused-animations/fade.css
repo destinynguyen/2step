@@ -116,6 +116,11 @@
     animation: fadeOutLeftAnimation 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* Smooth, slower version */
+.fade-out-left-slow {
+    animation: fadeOutLeftAnimation 0.9s ease forwards;
+}
+
 .fade-out-right-animation {
     animation: fadeOutRightAnimation 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

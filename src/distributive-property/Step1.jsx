@@ -48,13 +48,19 @@ export function Step1({ expression, onNext, onReset }) {
   
   const flexiMessages = [
     "Let's work together to solve this two-step equation!",
-    "Isolate x by dragging the highlighted terms to the other side of the equation.",
-    "We'll do this step by step - are you ready?"
+    "Isolate x by dragging the highlighted term to the other side of the equation.",
+    "To do this, you perform the inverse operations to both sides of the equation.",
+    "Great! Now drag the denominator term so we can eliminate the fraction.",
+    "Almost there – watch how we simplify the right side.",
+    "All done! We've isolated x."
   ];
+
+  const crossMessage = "To do this, you perform the inverse operations to both sides of the equation";
+  const [showCrossMsg, setShowCrossMsg] = useState(false);
   
   const handleNextMessage = () => {
     if (messageIndex < flexiMessages.length - 1) {
-      setMessageIndex(messageIndex + 1);
+      setMessageIndex(prev=>prev+1);
     }
   };
   
@@ -105,6 +111,29 @@ export function Step1({ expression, onNext, onReset }) {
       placedRight: prev.hasCrossed ? true : false
     }));
   };
+
+  // Auto message transitions
+  useEffect(()=>{
+    if(dragState.hasCrossed){
+      setMessageIndex(2);
+    }
+  },[dragState.hasCrossed]);
+
+  // when denominator ready to drag (highlight shown)
+  useEffect(()=>{
+    if(rightStage===3){
+      setMessageIndex(3);
+    }
+  },[rightStage]);
+
+  // when multiplication simplification starts glow
+  useEffect(()=>{
+     if(multStage===1){
+       setMessageIndex(4);
+     } else if(multStage===3){
+       setMessageIndex(5);
+     }
+  },[multStage]);
 
   /* ---------------- Denominator drag handlers ---------------- */
 
@@ -247,7 +276,7 @@ export function Step1({ expression, onNext, onReset }) {
             {!leftDenomVanished && (
             <span 
               className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''} ${leftDenomVanished? 'fade-out-left-slow':''}`}
-              style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'}:{}}
+              style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 4px rgba(87,80,227,0.6), 0 0 6px rgba(87,80,227,0.4)'}:{}}
               onMouseDown={startDenomDrag}
             >{equation.denominator}</span>) }
           </span>
@@ -257,7 +286,7 @@ export function Step1({ expression, onNext, onReset }) {
                 <span
                   className={`${messageIndex === 1 && !dragState.placedRight ? 'glow-highlight cursor-grab' : ''} ${dragState.isDragging ? 'cursor-grabbing opacity-0' : ''} ${dragState.placedRight ? (vanishLeft ? 'fade-out-left-animation' : '') : ''}`}
                   style={messageIndex === 1 && !dragState.placedRight ? {
-                    textShadow: '0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'
+                    textShadow: '0 0 4px rgba(87,80,227,0.6), 0 0 6px rgba(87,80,227,0.4)'
                   } : {}}
                   onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
                 >
@@ -354,7 +383,7 @@ export function Step1({ expression, onNext, onReset }) {
             <p className="text-sm text-gray-700 mb-1">
               {flexiMessages[messageIndex]}
             </p>
-            {messageIndex < flexiMessages.length - 1 && (
+            {messageIndex === 0 && (
               <button
                 onClick={handleNextMessage}
                 className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"

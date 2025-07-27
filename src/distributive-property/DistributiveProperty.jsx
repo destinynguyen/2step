@@ -23,9 +23,9 @@ export function DistributiveProperty() {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1 expression={expression} onNext={handleNext} onReset={handleReset} />;
+        return <Step1 key={`step1-${expression.denominator}-${expression.b}-${expression.c}`} expression={expression} onNext={handleNext} onReset={handleReset} />;
       case 2:
-        return <Step2 expression={expression} onNext={handleNext} onBack={handleBack} onReset={handleReset} />;
+        return <Step2 key={`step2-${expression.denominator}-${expression.b}-${expression.c}`} expression={expression} onNext={handleNext} onBack={handleBack} onReset={handleReset} />;
       default:
         return <div>Step not found</div>;
     }

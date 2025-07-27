@@ -29,6 +29,14 @@ export function Step1({ expression, onNext, onReset }) {
   const [shiftFill, setShiftFill] = useState(false);   // shift x fraction to the right
   // rightStage: 0 none, 1 glow, 2 fade out, 3 result shown
   const [rightStage, setRightStage] = useState(0);
+
+  // State for dragging denominator
+  const [denomDrag, setDenomDrag] = useState({
+    isDragging:false,
+    position:{x:0,y:0},
+    hasCrossed:false,
+    placedRight:false
+  });
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
@@ -45,7 +53,7 @@ export function Step1({ expression, onNext, onReset }) {
   };
   
   const handleDragStart = (e) => {
-    if (messageIndex !== 1 || !containerRef.current) return;
+    if (messageIndex !== 1 || rightStage!==0 || !containerRef.current) return;
 
     e.preventDefault();
 
@@ -92,6 +100,48 @@ export function Step1({ expression, onNext, onReset }) {
     }));
   };
 
+  /* ---------------- Denominator drag handlers ---------------- */
+
+  const startDenomDrag=(e)=>{
+    if(rightStage!==3 || denomDrag.placedRight) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const rect=containerRef.current.getBoundingClientRect();
+    setDenomDrag({isDragging:true,position:{x:e.clientX-rect.left,y:e.clientY-rect.top},hasCrossed:false,placedRight:false});
+  };
+
+  const moveDenomDrag=(e)=>{
+    if(!denomDrag.isDragging||!containerRef.current) return;
+    const rect=containerRef.current.getBoundingClientRect();
+    const relX=e.clientX-rect.left;
+    const relY=e.clientY-rect.top;
+    let crossed=denomDrag.hasCrossed;
+    if(!crossed && equalsRef.current){
+      const eqRect=equalsRef.current.getBoundingClientRect();
+      if(e.clientX>eqRect.left) crossed=true;
+    }
+    setDenomDrag(prev=>({...prev,position:{x:relX,y:relY},hasCrossed:crossed}));
+  };
+
+  const endDenomDrag=()=>{
+    if(!denomDrag.isDragging) return;
+    setDenomDrag(prev=>({
+      isDragging:false,
+      position:{x:0,y:0},
+      hasCrossed:prev.hasCrossed,
+      placedRight:prev.hasCrossed
+    }));
+  };
+
+  useEffect(()=>{
+    if(!denomDrag.isDragging) return;
+    const move=(e)=>moveDenomDrag(e);
+    const up=()=>endDenomDrag();
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',up);
+    return ()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);}  
+  },[denomDrag.isDragging]);
+
   // Orchestrate post-placement animations: strike-through (already handled by CSS delay),
   // then vanish, then slide right.
   useEffect(() => {
@@ -123,6 +173,8 @@ export function Step1({ expression, onNext, onReset }) {
       setLeftRemoved(false);
       setShiftFill(false);
       setRightStage(0);
+
+      setDenomDrag({isDragging:false,position:{x:0,y:0},hasCrossed:false,placedRight:false});
     }
   }, [dragState.placedRight]);
   
@@ -163,12 +215,16 @@ export function Step1({ expression, onNext, onReset }) {
         style={{ minHeight: '420px' }}
       >
         <div 
-          className={`text-3xl font-bold text-[#5750E3] flex items-center select-text ${messageIndex === 1 ? 'cursor-grab' : ''}`}
-          onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
+          className={`text-3xl font-bold text-[#5750E3] flex items-center select-text ${messageIndex === 1 && rightStage===0 ? 'cursor-grab' : ''}`}
+          onMouseDown={messageIndex === 1 && rightStage===0 ? handleDragStart : undefined}
         >
           <span className={`flex flex-col items-center relative ${shiftFill ? 'slide-right-fill' : ''}`}>  
             <span>x</span>
-            <span className="border-t border-[#5750E3] w-full text-center">{equation.denominator}</span>
+            <span 
+              className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''}`}
+              style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 8px rgba(251,191,36,0.8), 0 0 12px rgba(251,191,36,0.6)'}:{}}
+              onMouseDown={startDenomDrag}
+            >{equation.denominator}</span>
           </span>
                       <span className="relative inline-block ml-2">
               {/* Original term (purple). Hide after placement */}
@@ -197,6 +253,11 @@ export function Step1({ expression, onNext, onReset }) {
                 </span>
               )}
             </span>
+          {/* Show ×a on left once denominator placed */}
+          {denomDrag.placedRight && (
+            <span className="ml-2 text-gray-400">×{equation.denominator}</span>
+          )}
+
           <span className="ml-2" ref={equalsRef}>=</span>
 
           {/* Right side dynamic container: consistent margin and gap */}
@@ -221,6 +282,11 @@ export function Step1({ expression, onNext, onReset }) {
             {rightStage===3 && (
               <span className="inline-block pop-in text-[#5750E3]">{equation.c - equation.b}</span>
             )}
+
+            {/* ×a on right when placed (render after result) */}
+            {denomDrag.placedRight && (
+              <span className="text-[#5750E3]">×{equation.denominator}</span>
+            )}
           </span>
           </div>
           
@@ -235,6 +301,16 @@ export function Step1({ expression, onNext, onReset }) {
               }}
             >
               {dragState.hasCrossed ? (equation.b>=0?'-':'+')+Math.abs(equation.b) : (equation.b>=0?'+':'')+equation.b}
+            </div>
+          )}
+        
+          {/* Drag overlay for denominator */}
+          {denomDrag.isDragging && (
+            <div
+              className="absolute pointer-events-none text-3xl font-bold text-[#5750E3]"
+              style={{left:denomDrag.position.x-10, top:denomDrag.position.y-20, zIndex:1000}}
+            >
+              {denomDrag.hasCrossed? `×${equation.denominator}` : `÷${equation.denominator}`}
             </div>
           )}
         

@@ -8,6 +8,7 @@ import flexiConfident from '../assets/Fleximojis/Flexi_Confident.png';
 import '../components/reused-animations/strike.css';
 import '../components/reused-animations/scale.css'; // retain in case used elsewhere but fade animation will be used instead
 import '../components/reused-animations/shift.css'; // for slide-right-fill
+import '../components/reused-animations/simplify.css'; // right-side simplify animations
 
 export function Step1({ expression, onNext, onReset }) {
   // Generate a two-step equation if expression is not provided
@@ -26,6 +27,8 @@ export function Step1({ expression, onNext, onReset }) {
   const [vanishLeft, setVanishLeft] = useState(false); // start fading out left terms
   const [leftRemoved, setLeftRemoved] = useState(false); // actually remove the spans after animation
   const [shiftFill, setShiftFill] = useState(false);   // shift x fraction to the right
+  // rightStage: 0 none, 1 glow, 2 fade out, 3 result shown
+  const [rightStage, setRightStage] = useState(0);
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
@@ -103,15 +106,23 @@ export function Step1({ expression, onNext, onReset }) {
       // shift x fraction right after grey terms fully gone
       const slideTimer  = setTimeout(() => setShiftFill(true), 700 + 500);
 
+      // Begin right-side simplification once x has shifted (add 400ms for shift animation)
+      const simplifyStart = 700 + 500 + 400;
+      const tGlow = setTimeout(() => setRightStage(1), simplifyStart);        // glow
+      const tFade = setTimeout(() => setRightStage(2), simplifyStart + 400);  // fade out
+      const tResult = setTimeout(() => setRightStage(3), simplifyStart + 700); // show result
+
       return () => {
         clearTimeout(vanishTimer);
         clearTimeout(slideTimer);
+        clearTimeout(tGlow);clearTimeout(tFade);clearTimeout(tResult);
       };
     } else {
       // Reset flags when interaction resets
       setVanishLeft(false);
       setLeftRemoved(false);
       setShiftFill(false);
+      setRightStage(0);
     }
   }, [dragState.placedRight]);
   
@@ -187,13 +198,30 @@ export function Step1({ expression, onNext, onReset }) {
               )}
             </span>
           <span className="ml-2" ref={equalsRef}>=</span>
-          <span className="ml-2">{equation.c}</span>
-             {/* Right side placeholder or placed term */}
-             {dragState.placedRight ? (
-               <span className="ml-2 text-[#5750E3]">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
-             ) : dragState.hasCrossed ? (
-               <span className="ml-2 text-gray-400">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
-             ) : null}
+
+          {/* Right side dynamic container: consistent margin and gap */}
+          <span className="relative inline-flex items-center gap-2 ml-3">
+            {/* c term */}
+            {(rightStage < 3) && (
+              <span className={`inline-block ${rightStage===1? 'glow-scale':''} ${rightStage===2? 'quick-fade-out':''}`}>{equation.c}</span>
+            )}
+
+            {/* -b / +b term */}
+            {dragState.placedRight ? (
+              (rightStage < 3 ? (
+                <span className={`inline-block text-[#5750E3] ${rightStage===1? 'glow-scale':''} ${rightStage===2? 'quick-fade-out':''}`}>
+                  {equation.b>=0?'-':'+'}{Math.abs(equation.b)}
+                </span>
+              ): null)
+            ) : dragState.hasCrossed ? (
+              <span className="ml-2 text-gray-400">{equation.b>=0?'-':'+'}{Math.abs(equation.b)}</span>
+            ) : null}
+
+            {/* result */}
+            {rightStage===3 && (
+              <span className="inline-block pop-in text-[#5750E3]">{equation.c - equation.b}</span>
+            )}
+          </span>
           </div>
           
           {/* Dragged element */}

@@ -327,7 +327,9 @@ export function Step1({ expression, onNext, onReset }) {
     } else {
       // Reset flags when interaction resets
       setVanishLeft(false);
-      setLeftRemoved(false);
+      /* Do NOT reset leftRemoved here – it causes the original b term to briefly re-render
+         when navigating back and forth. Its value is handled explicitly in applyEquationState. */
+      // setLeftRemoved(false);
       setShiftFill(false);
       setRightStage(0);
 

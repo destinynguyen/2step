@@ -322,15 +322,21 @@ export function Step1({ expression, onNext, onReset }) {
     if (navRef.current) return; // skip during snapshot navigation
 
     if (denomDrag.placedRight) {
-      // 1. Fade the grey multiplication on the left after a short delay
-      const tFadeLeft = setTimeout(() => setLeftDenomVanished(true), 900);
+      // Timing constants to sync with strike-through
+      const STRIKE_DELAY = 800;      // matches CSS animation-delay in strike.css
+      const STRIKE_DURATION = 1000;  // strike draw duration
+      const FADE_DURATION = 1200;    // .fade-out-left-slow duration
 
-      // 2. After left fade is done (another 900 ms) kick off the right-side
-      //    multiplication simplify: glow → fade → numeric result
-      const start = 900 + 900;
-      const tGlow = setTimeout(() => setMultStage(1), start);        // glow terms
-      const tFade = setTimeout(() => setMultStage(2), start + 400);  // fade terms
-      const tResult = setTimeout(() => setMultStage(3), start + 700);// show product
+      const strikeComplete = STRIKE_DELAY + STRIKE_DURATION; // 1.8 s
+
+      // 1. Fade the grey multiplication on the left after strike-through completes
+      const tFadeLeft = setTimeout(() => setLeftDenomVanished(true), strikeComplete);
+
+      // 2. After left fade is done kick off the right-side multiplication simplify
+      const simplifyStart = strikeComplete + FADE_DURATION; // 1.8 s + 1.2 s = 3.0 s
+      const tGlow = setTimeout(() => setMultStage(1), simplifyStart);        // glow terms
+      const tFade = setTimeout(() => setMultStage(2), simplifyStart + 400);  // fade terms
+      const tResult = setTimeout(() => setMultStage(3), simplifyStart + 700);// show product
 
       return () => {
         clearTimeout(tFadeLeft);
@@ -360,18 +366,26 @@ export function Step1({ expression, onNext, onReset }) {
     if (navRef.current) return; // skip animations triggered by navigation
 
     if (dragState.placedRight) {
-      // 0.7 s strike-through delay – start vanishing as soon as line begins drawing
+      // Strike-through timing updated: 0.8 s delay + 1 s draw = 1.8 s total before moving on
+      const STRIKE_DELAY = 800;      // matches CSS animation-delay in strike.css
+      const STRIKE_DURATION = 1000;  // matches CSS animation duration (1s)
+      const FADE_DURATION = 1200;    // fade-out-left-slow duration
+      const SHIFT_DURATION = 600;    // slide-right-fill duration
+
+      const vanishStart = STRIKE_DELAY + STRIKE_DURATION; // 1.8 s
+
+      // Start vanishing only after line fully drawn
       const vanishTimer = setTimeout(() => {
         setVanishLeft(true);
-        // schedule removal after shrink-out duration (0.5s)
-        setTimeout(() => setLeftRemoved(true), 500);
-      }, 700);
+        // schedule removal after fade duration to allow full fade-out
+        setTimeout(() => setLeftRemoved(true), FADE_DURATION);
+      }, vanishStart);
 
-      // shift x fraction right after grey terms fully gone
-      const slideTimer  = setTimeout(() => setShiftFill(true), 700 + 500);
+      // shift x fraction right after grey terms fully gone (vanish + fade duration)
+      const slideTimer  = setTimeout(() => setShiftFill(true), vanishStart + FADE_DURATION);
 
-      // Begin right-side simplification once x has shifted (add 400ms for shift animation)
-      const simplifyStart = 700 + 500 + 400;
+      // Begin right-side simplification once x has shifted (add shift duration)
+      const simplifyStart = vanishStart + FADE_DURATION + SHIFT_DURATION;
       const tGlow = setTimeout(() => setRightStage(1), simplifyStart);        // glow
       const tFade = setTimeout(() => setRightStage(2), simplifyStart + 400);  // fade out
       const tResult = setTimeout(() => setRightStage(3), simplifyStart + 700); // show result
@@ -440,7 +454,7 @@ export function Step1({ expression, onNext, onReset }) {
             <span>x</span>
             {!leftDenomVanished && (
             <span 
-              className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''} ${leftDenomVanished? 'fade-out-left-slow':''}`}
+              className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${denomDrag.placedRight ? 'strike-through' : ''} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''} ${leftDenomVanished? 'fade-out-left-slow':''}`}
               style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 4px rgba(87,80,227,0.6), 0 0 6px rgba(87,80,227,0.4)'}:{}}
               onMouseDown={startDenomDrag}
             >{equation.denominator}</span>) }
@@ -474,7 +488,10 @@ export function Step1({ expression, onNext, onReset }) {
             </span>
           {/* Show ×a on left once denominator placed */}
           {denomDrag.placedRight && !leftDenomVanished && (
-            <span className={`ml-2 text-gray-400 ${leftDenomVanished? 'fade-out-left-slow':''}`}>×{equation.denominator}</span>
+            <span className={`ml-2 text-gray-400 ${leftDenomVanished? 'fade-out-left-slow':''}`}>
+              ×
+              <span className={`relative ${denomDrag.placedRight ? 'strike-through' : ''}`}>{equation.denominator}</span>
+            </span>
           )}
 
           <span className="ml-2" ref={equalsRef}>=</span>

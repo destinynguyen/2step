@@ -118,7 +118,7 @@
 
 /* Smooth, slower version */
 .fade-out-left-slow {
-    animation: fadeOutLeftAnimation 0.9s ease forwards;
+    animation: fadeOutLeftAnimation 1.2s ease forwards;
 }
 
 .fade-out-right-animation {

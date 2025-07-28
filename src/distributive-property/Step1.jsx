@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Container } from '../components/reused-ui/Container';
-import { GlowButton } from '../components/reused-ui/GlowButton';
 import { generateTwoStepEquation } from './utils';
-import flexiConfident from '../assets/Fleximojis/Flexi_Confident.png';
+import flexiWave from '../assets/All Flexi Poses/PNG/Flexi_Wave.png';
+import flexiStars from '../assets/All Flexi Poses/PNG/Flexi_Stars.png';
 
 // Animation for striking through cancelled terms
 import '../components/reused-animations/strike.css';
@@ -58,11 +58,34 @@ export function Step1({ expression, onNext, onReset }) {
   const crossMessage = "To do this, you perform the inverse operations to both sides of the equation";
   const [showCrossMsg, setShowCrossMsg] = useState(false);
   
+  // Existing helper (not used anymore)
   const handleNextMessage = () => {
     if (messageIndex < flexiMessages.length - 1) {
-      setMessageIndex(prev=>prev+1);
+      setMessageIndex(prev => prev + 1);
     }
   };
+
+  /* ------------ Local navigation (forward / back) ------------ */
+  const canGoBack = messageIndex > 0;
+  const canGoForward = messageIndex < flexiMessages.length - 1;
+
+  const handleBackMessage = () => {
+    if (!canGoBack) return;
+    setMessageIndex(prev => {
+      const newIdx = prev - 1;
+      applyEquationState(newIdx);
+      return newIdx;
+    });
+  };
+ 
+   const handleForwardMessage = () => {
+     if (!canGoForward) return;
+     setMessageIndex(prev => {
+       const newIdx = prev + 1;
+       applyEquationState(newIdx);
+       return newIdx;
+     });
+   };
   
   const handleDragStart = (e) => {
     if (messageIndex !== 1 || rightStage!==0 || !containerRef.current) return;
@@ -134,6 +157,86 @@ export function Step1({ expression, onNext, onReset }) {
        setMessageIndex(5);
      }
   },[multStage]);
+
+  // initialise equation state for first message
+  useEffect(()=>{
+    applyEquationState(0);
+  },[]);
+
+  // Auto-advance first message after 3 s
+  useEffect(() => {
+    if (messageIndex === 0) {
+      const t = setTimeout(() => {
+        setMessageIndex(1);
+        applyEquationState(1);
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+  }, [messageIndex]);
+
+  // Apply static equation snapshot for each message without animations
+  const applyEquationState = (idx) => {
+    // base defaults
+    let newDrag = { isDragging: false, position: { x: 0, y: 0 }, showGhostLeft: false, hasCrossed: false, placedRight: false };
+    let newDenom = { isDragging: false, position: { x: 0, y: 0 }, hasCrossed: false, placedRight: false };
+    let _vanishLeft = false;
+    let _leftRemoved = false;
+    let _shiftFill = false;
+    let _rightStage = 0;
+    let _leftDenomVanished = false;
+    let _multStage = 0;
+
+    switch (idx) {
+      case 0:
+        // initial
+        break;
+      case 1:
+        // highlight only
+        break;
+      case 2:
+        newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
+        break;
+      case 3:
+        newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
+        _vanishLeft = true;
+        _leftRemoved = true;
+        _shiftFill = true;
+        _rightStage = 3;
+        break;
+      case 4:
+        newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
+        _vanishLeft = true;
+        _leftRemoved = true;
+        _shiftFill = true;
+        _rightStage = 3;
+        newDenom = { ...newDenom, hasCrossed: true, placedRight: true };
+        _leftDenomVanished = true;
+        _multStage = 1;
+        break;
+      case 5:
+        newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
+        _vanishLeft = true;
+        _leftRemoved = true;
+        _shiftFill = true;
+        _rightStage = 3;
+        newDenom = { ...newDenom, hasCrossed: true, placedRight: true };
+        _leftDenomVanished = true;
+        _multStage = 3;
+        break;
+      default:
+        break;
+    }
+
+    // apply in one batch per state var
+    setDragState(newDrag);
+    setDenomDrag(newDenom);
+    setVanishLeft(_vanishLeft);
+    setLeftRemoved(_leftRemoved);
+    setShiftFill(_shiftFill);
+    setRightStage(_rightStage);
+    setLeftDenomVanished(_leftDenomVanished);
+    setMultStage(_multStage);
+  };
 
   /* ---------------- Denominator drag handlers ---------------- */
 
@@ -255,6 +358,8 @@ export function Step1({ expression, onNext, onReset }) {
     };
   }, [dragState.isDragging]);
 
+  const isAnimating = dragState.isDragging || denomDrag.isDragging || vanishLeft || rightStage===1 || rightStage===2 || multStage===1 || multStage===2;
+
   return (
     <Container 
       text="Two Step Equation" 
@@ -315,7 +420,7 @@ export function Step1({ expression, onNext, onReset }) {
           <span className="ml-2" ref={equalsRef}>=</span>
 
           {/* Right side dynamic container: consistent margin and gap */}
-          <span className="relative inline-flex items-center gap-2 ml-3">
+          <span className="relative inline-flex items-center gap-1 ml-3">
             {/* c term */}
             {(rightStage < 3) && (
               <span className={`inline-block ${rightStage===1? 'glow-scale':''} ${rightStage===2? 'quick-fade-out':''}`}>{equation.c}</span>
@@ -339,7 +444,7 @@ export function Step1({ expression, onNext, onReset }) {
 
             {/* ×a placed to the right of current term */}
             {denomDrag.placedRight && multStage < 2 && (
-              <span className={`ml-1 text-[#5750E3] ${multStage===1?'glow-scale':''}`}>×{equation.denominator}</span>
+              <span className={`text-[#5750E3] ${multStage===1?'glow-scale':''}`}>×{equation.denominator}</span>
             )}
 
             {/* product result */}
@@ -374,26 +479,40 @@ export function Step1({ expression, onNext, onReset }) {
           )}
         
         <div className="absolute bottom-4 left-4 flex items-end space-x-2">
-          <img 
-            src={flexiConfident} 
-            alt="Flexi confident" 
+          <img
+            src={isAnimating ? flexiStars : flexiWave}
+            alt="Flexi"
             className="w-20 h-20"
           />
           <div className="bg-white border border-gray-300 rounded-lg p-2 shadow-lg max-w-48">
             <p className="text-sm text-gray-700 mb-1">
               {flexiMessages[messageIndex]}
             </p>
-            {messageIndex === 0 && (
-              <button
-                onClick={handleNextMessage}
-                className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-              >
-                Next
-              </button>
-            )}
           </div>
         </div>
         
+        {/* Forward / Back circular buttons */}
+        <div className="absolute bottom-4 right-4 flex gap-3">
+          {/* Back */}
+          <button
+            onClick={handleBackMessage}
+            disabled={!canGoBack}
+            aria-label="Previous message"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-colors ${canGoBack ? 'bg-[#008545] hover:bg-[#00783E]' : 'bg-gray-300 cursor-not-allowed'}`}
+          >
+            &#60;
+          </button>
+
+          {/* Forward */}
+          <button
+            onClick={handleForwardMessage}
+            disabled={!canGoForward}
+            aria-label="Next message"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-colors ${canGoForward ? 'bg-[#008545] hover:bg-[#00783E]' : 'bg-gray-300 cursor-not-allowed'}`}
+          >
+            &#62;
+          </button>
+        </div>
 
       </div>
     </Container>

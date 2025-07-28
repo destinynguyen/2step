@@ -44,16 +44,21 @@ export function Step1({ expression, onNext, onReset }) {
 
   // multiplication simplify stage: 0 none, 1 glow, 2 fade, 3 final result
   const [multStage, setMultStage] = useState(0);
+
+  // Becomes true only after the learner presses Forward on the equation
+  // “x / 2 × 2 = 3 × 2”.  Drives the final cancellation of the denominator.
+  const [simplifyTriggered, setSimplifyTriggered] = useState(false);
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
   const flexiMessages = [
-    "Let's work together to solve this two-step equation!",
-    "Isolate x by dragging the highlighted term to the other side of the equation.",
-    "To do this, you perform the inverse operations to both sides of the equation.",
-    "Great! Now drag the denominator term so we can eliminate the fraction.",
-    "Almost there – watch how we simplify the right side.",
-    "All done! We've isolated x."
+    "Let's work together to solve this two-step equation!",                           // 0
+    "Isolate x by dragging the highlighted term to the other side of the equation.", // 1
+    "To do this, you perform the inverse operations to both sides of the equation.", // 2
+    "Great! Now drag the denominator term so we can eliminate the fraction.",        // 3
+    "Almost there – watch how we simplify the right side.",                          // 4
+    "Nice! Press the forward arrow once more to compute the value of x.",            // 5
+    "All done! We've isolated x."                                                    // 6
   ];
 
   const crossMessage = "To do this, you perform the inverse operations to both sides of the equation";
@@ -70,22 +75,38 @@ export function Step1({ expression, onNext, onReset }) {
   const canGoBack = messageIndex > 0;
   const canGoForward = messageIndex < flexiMessages.length - 1;
 
-  const handleBackMessage = () => {
+  // Flag: true while we are applying a static snapshot due to forward/back navigation.
+  const navRef = useRef(false);
+
+  // Helper to reset the flag after React finishes the commit.
+  const resetNavFlag = () => {
+    // Use micro-task so it runs after all effects scheduled for this update.
+    Promise.resolve().then(() => { navRef.current = false; });
+  };
+ 
+   const handleBackMessage = () => {
     if (!canGoBack) return;
+    navRef.current = true;
     setMessageIndex(prev => {
       const newIdx = prev - 1;
       applyEquationState(newIdx);
       return newIdx;
     });
+    resetNavFlag();
   };
  
    const handleForwardMessage = () => {
      if (!canGoForward) return;
+
+     navRef.current = true;
+     // Default behaviour: advance one snapshot step
      setMessageIndex(prev => {
        const newIdx = prev + 1;
        applyEquationState(newIdx);
        return newIdx;
      });
+
+     resetNavFlag();
    };
   
   const handleDragStart = (e) => {
@@ -150,14 +171,23 @@ export function Step1({ expression, onNext, onReset }) {
     }
   },[rightStage]);
 
-  // when multiplication simplification starts glow
-  useEffect(()=>{
-     if(multStage===1){
-       setMessageIndex(4);
-     } else if(multStage===3){
-       setMessageIndex(5);
-     }
-  },[multStage]);
+  // Sync messages with live drag-triggered simplify animation.
+  useEffect(() => {
+    if (navRef.current) return; // ignore during Forward/Back snapshots
+
+    // Glow stage – show "Almost there" prompt if we haven't reached it yet.
+    if (multStage === 1 && messageIndex < 4) {
+      setMessageIndex(4);
+    }
+
+    // Final numeric product – show "All done" message.
+    if (multStage === 3 && messageIndex < 6) {
+      setMessageIndex(6);
+    }
+  }, [multStage, messageIndex]);
+
+  /* -------------- suppress animation effects when navRef is set -------------- */
+  // (No changes required here; we gate individual animation effects below.)
 
   // initialise equation state for first message
   useEffect(()=>{
@@ -211,10 +241,22 @@ export function Step1({ expression, onNext, onReset }) {
         _shiftFill = true;
         _rightStage = 3;
         newDenom = { ...newDenom, hasCrossed: true, placedRight: true };
-        _leftDenomVanished = true;
-        _multStage = 1;
+        _leftDenomVanished = false;
+        _multStage = 0;
         break;
       case 5:
+        // Snapshot: x = 3 × 2 (denominator visible, no product yet)
+        newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
+        _vanishLeft = true;
+        _leftRemoved = true;
+        _shiftFill = true;
+        _rightStage = 3;
+        newDenom = { ...newDenom, hasCrossed: true, placedRight: true };
+        _leftDenomVanished = true;   // denominator already cancelled on left
+        _multStage = 0;              // keep ×2 visible (multStage < 2)
+        break;
+      case 6:
+        // Final numeric result x = 6
         newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
         _vanishLeft = true;
         _leftRemoved = true;
@@ -222,7 +264,7 @@ export function Step1({ expression, onNext, onReset }) {
         _rightStage = 3;
         newDenom = { ...newDenom, hasCrossed: true, placedRight: true };
         _leftDenomVanished = true;
-        _multStage = 3;
+        _multStage = 3;              // show product value
         break;
       default:
         break;
@@ -272,23 +314,36 @@ export function Step1({ expression, onNext, onReset }) {
     }));
   };
 
-  // when denominator placed, schedule left grey terms to vanish
-  useEffect(()=>{
-     if(denomDrag.placedRight){
-        const t=setTimeout(()=>setLeftDenomVanished(true),900); // start fade after 0.9s
+  // Run the denominator-cancellation animation when the learner actually drags
+  // the denominator across (navRef.current === false).  When we are merely
+  // displaying a static snapshot via forward/back navigation, navRef.current
+  // is true and the animation is skipped.
+  useEffect(() => {
+    if (navRef.current) return; // skip during snapshot navigation
 
-        // sequence for right-side multiplication simplification
-        const start=900+900; // wait for vanish complete (fade takes 0.9s)
-        const g=setTimeout(()=>setMultStage(1),start);           // glow both terms
-        const f=setTimeout(()=>setMultStage(2),start+400);       // fade
-        const r=setTimeout(()=>setMultStage(3),start+700);       // show product
+    if (denomDrag.placedRight) {
+      // 1. Fade the grey multiplication on the left after a short delay
+      const tFadeLeft = setTimeout(() => setLeftDenomVanished(true), 900);
 
-        return ()=>{clearTimeout(t);clearTimeout(g);clearTimeout(f);clearTimeout(r);}  
-     }else{
-        setLeftDenomVanished(false);
-        setMultStage(0);
-     }
-  },[denomDrag.placedRight]);
+      // 2. After left fade is done (another 900 ms) kick off the right-side
+      //    multiplication simplify: glow → fade → numeric result
+      const start = 900 + 900;
+      const tGlow = setTimeout(() => setMultStage(1), start);        // glow terms
+      const tFade = setTimeout(() => setMultStage(2), start + 400);  // fade terms
+      const tResult = setTimeout(() => setMultStage(3), start + 700);// show product
+
+      return () => {
+        clearTimeout(tFadeLeft);
+        clearTimeout(tGlow);
+        clearTimeout(tFade);
+        clearTimeout(tResult);
+      };
+    } else {
+      // Reset when the denominator is moved back or on reset
+      setLeftDenomVanished(false);
+      setMultStage(0);
+    }
+  }, [denomDrag.placedRight]);
 
   useEffect(()=>{
     if(!denomDrag.isDragging) return;
@@ -302,6 +357,8 @@ export function Step1({ expression, onNext, onReset }) {
   // Orchestrate post-placement animations: strike-through (already handled by CSS delay),
   // then vanish, then slide right.
   useEffect(() => {
+    if (navRef.current) return; // skip animations triggered by navigation
+
     if (dragState.placedRight) {
       // 0.7 s strike-through delay – start vanishing as soon as line begins drawing
       const vanishTimer = setTimeout(() => {

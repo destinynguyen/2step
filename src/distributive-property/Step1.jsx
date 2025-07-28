@@ -3,6 +3,7 @@ import { Container } from '../components/reused-ui/Container';
 import { generateTwoStepEquation } from './utils';
 import flexiWave from '../assets/All Flexi Poses/PNG/Flexi_Wave.png';
 import flexiStars from '../assets/All Flexi Poses/PNG/Flexi_Stars.png';
+import flexiThumbsUp from '../assets/All Flexi Poses/PNG/Flexi_ThumbsUp.png';
 
 // Animation for striking through cancelled terms
 import '../components/reused-animations/strike.css';
@@ -198,7 +199,7 @@ export function Step1({ expression, onNext, onReset }) {
         break;
       case 3:
         newDrag = { ...newDrag, showGhostLeft: true, hasCrossed: true, placedRight: true };
-        _vanishLeft = true;
+        _vanishLeft = false;
         _leftRemoved = true;
         _shiftFill = true;
         _rightStage = 3;
@@ -358,7 +359,7 @@ export function Step1({ expression, onNext, onReset }) {
     };
   }, [dragState.isDragging]);
 
-  const isAnimating = dragState.isDragging || denomDrag.isDragging || vanishLeft || rightStage===1 || rightStage===2 || multStage===1 || multStage===2;
+  const isAnimating = (messageIndex !== flexiMessages.length - 1) && (dragState.isDragging || denomDrag.isDragging || rightStage===1 || rightStage===2 || multStage===1 || multStage===2);
 
   return (
     <Container 
@@ -369,7 +370,7 @@ export function Step1({ expression, onNext, onReset }) {
     >
       <div 
         ref={containerRef}
-        className="flex items-center justify-center w-full relative" 
+        className="flex items-start justify-center w-full pt-28 relative"
         style={{ minHeight: '420px' }}
       >
         <div 
@@ -428,7 +429,7 @@ export function Step1({ expression, onNext, onReset }) {
 
             {/* -b / +b term */}
             {dragState.placedRight ? (
-              (rightStage < 3 ? (
+              (rightStage < 3 && messageIndex < 3 ? (
                 <span className={`inline-block text-[#5750E3] ${rightStage===1? 'glow-scale':''} ${rightStage===2? 'quick-fade-out':''}`}>
                   {equation.b>=0?'-':'+'}{Math.abs(equation.b)}
                 </span>
@@ -442,9 +443,12 @@ export function Step1({ expression, onNext, onReset }) {
               <span className={`inline-block ${multStage===1?'glow-scale':''} ${multStage===2?'quick-fade-out':''}`}>{equation.c - equation.b}</span>
             )}
 
-            {/* ×a placed to the right of current term */}
+            {/* × denominator split for balanced spacing */}
             {denomDrag.placedRight && multStage < 2 && (
-              <span className={`text-[#5750E3] ${multStage===1?'glow-scale':''}`}>×{equation.denominator}</span>
+              <>
+                <span className={`text-[#5750E3] ${multStage===1?'glow-scale':''}`}>×</span>
+                <span className={`text-[#5750E3] ${multStage===1?'glow-scale':''}`}>{equation.denominator}</span>
+              </>
             )}
 
             {/* product result */}
@@ -480,7 +484,7 @@ export function Step1({ expression, onNext, onReset }) {
         
         <div className="absolute bottom-4 left-4 flex items-end space-x-2">
           <img
-            src={isAnimating ? flexiStars : flexiWave}
+            src={isAnimating ? flexiStars : (messageIndex === flexiMessages.length - 1 ? flexiThumbsUp : flexiWave)}
             alt="Flexi"
             className="w-20 h-20"
           />
@@ -492,7 +496,7 @@ export function Step1({ expression, onNext, onReset }) {
         </div>
         
         {/* Forward / Back circular buttons */}
-        <div className="absolute bottom-4 right-4 flex gap-3">
+        <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 flex gap-3">
           {/* Back */}
           <button
             onClick={handleBackMessage}

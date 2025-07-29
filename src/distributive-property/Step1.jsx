@@ -51,6 +51,14 @@ export function Step1({ expression, onNext, onReset }) {
   const containerRef = useRef(null);
   const equalsRef = useRef(null);
   
+  /* -------------------- Cross-platform pointer helper -------------------- */
+  const getClient = (ev) => {
+    if (ev.touches && ev.touches.length > 0) {
+      return { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY };
+    }
+    return { clientX: ev.clientX, clientY: ev.clientY };
+  };
+
   const flexiMessages = [
     "Let's work together to solve this two-step equation!",                           // 0
     "Isolate x by dragging the highlighted term to the other side of the equation.", // 1
@@ -114,9 +122,10 @@ export function Step1({ expression, onNext, onReset }) {
 
     e.preventDefault();
 
+    const { clientX, clientY } = getClient(e);
     const rect = containerRef.current.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-    const relY = e.clientY - rect.top;
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
 
     setDragState({
       isDragging: true,
@@ -130,13 +139,14 @@ export function Step1({ expression, onNext, onReset }) {
   const handleDragMove = (e) => {
     if (!dragState.isDragging || !containerRef.current) return;
 
+    const { clientX, clientY } = getClient(e);
     const rect = containerRef.current.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-    const relY = e.clientY - rect.top;
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
     // crossing detection
     if (!dragState.hasCrossed && equalsRef.current){
       const eqRect = equalsRef.current.getBoundingClientRect();
-      if(e.clientX > eqRect.left){
+      if(clientX > eqRect.left){
         setDragState(prev=>({...prev,hasCrossed:true}));
       }
     }
@@ -287,19 +297,21 @@ export function Step1({ expression, onNext, onReset }) {
     if(rightStage!==3 || denomDrag.placedRight) return;
     e.stopPropagation();
     e.preventDefault();
+    const { clientX, clientY } = getClient(e);
     const rect=containerRef.current.getBoundingClientRect();
-    setDenomDrag({isDragging:true,position:{x:e.clientX-rect.left,y:e.clientY-rect.top},hasCrossed:false,placedRight:false});
+    setDenomDrag({isDragging:true,position:{x:clientX-rect.left,y:clientY-rect.top},hasCrossed:false,placedRight:false});
   };
 
   const moveDenomDrag=(e)=>{
     if(!denomDrag.isDragging||!containerRef.current) return;
+    const { clientX, clientY } = getClient(e);
     const rect=containerRef.current.getBoundingClientRect();
-    const relX=e.clientX-rect.left;
-    const relY=e.clientY-rect.top;
+    const relX=clientX-rect.left;
+    const relY=clientY-rect.top;
     let crossed=denomDrag.hasCrossed;
     if(!crossed && equalsRef.current){
       const eqRect=equalsRef.current.getBoundingClientRect();
-      if(e.clientX>eqRect.left) crossed=true;
+      if(clientX>eqRect.left) crossed=true;
     }
     setDenomDrag(prev=>({...prev,position:{x:relX,y:relY},hasCrossed:crossed}));
   };
@@ -357,7 +369,15 @@ export function Step1({ expression, onNext, onReset }) {
     const up=()=>endDenomDrag();
     document.addEventListener('mousemove',move);
     document.addEventListener('mouseup',up);
-    return ()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);}  
+    // touch listeners
+    document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('touchend',up);
+    return ()=>{
+      document.removeEventListener('mousemove',move);
+      document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move);
+      document.removeEventListener('touchend',up);
+    }  
   },[denomDrag.isDragging]);
 
   // Orchestrate post-placement animations: strike-through (already handled by CSS delay),
@@ -386,9 +406,12 @@ export function Step1({ expression, onNext, onReset }) {
 
       // Begin right-side simplification once x has shifted (add shift duration)
       const simplifyStart = vanishStart + FADE_DURATION + SHIFT_DURATION;
-      const tGlow = setTimeout(() => setRightStage(1), simplifyStart);        // glow
-      const tFade = setTimeout(() => setRightStage(2), simplifyStart + 400);  // fade out
-      const tResult = setTimeout(() => setRightStage(3), simplifyStart + 700); // show result
+      const ADD_GLOW_TO_FADE = 800;   // delay between glow start and fade start
+      const FADE_TO_RESULT = 1500;    // delay from glow start to numeric result
+
+      const tGlow = setTimeout(() => setRightStage(1), simplifyStart);               // glow
+      const tFade = setTimeout(() => setRightStage(2), simplifyStart + ADD_GLOW_TO_FADE); // fade out
+      const tResult = setTimeout(() => setRightStage(3), simplifyStart + FADE_TO_RESULT); // show result
 
       return () => {
         clearTimeout(vanishTimer);
@@ -424,11 +447,15 @@ export function Step1({ expression, onNext, onReset }) {
     if (dragState.isDragging) {
       document.addEventListener('mousemove', handleDocumentMouseMove);
       document.addEventListener('mouseup', handleDocumentMouseUp);
+      document.addEventListener('touchmove', handleDocumentMouseMove, {passive:false});
+      document.addEventListener('touchend', handleDocumentMouseUp);
     }
     
     return () => {
       document.removeEventListener('mousemove', handleDocumentMouseMove);
       document.removeEventListener('mouseup', handleDocumentMouseUp);
+      document.removeEventListener('touchmove', handleDocumentMouseMove);
+      document.removeEventListener('touchend', handleDocumentMouseUp);
     };
   }, [dragState.isDragging]);
 
@@ -449,6 +476,7 @@ export function Step1({ expression, onNext, onReset }) {
         <div 
           className={`text-3xl font-bold text-[#5750E3] flex items-center select-text ${messageIndex === 1 && rightStage===0 ? 'cursor-grab' : ''}`}
           onMouseDown={messageIndex === 1 && rightStage===0 ? handleDragStart : undefined}
+          onTouchStart={messageIndex === 1 && rightStage===0 ? handleDragStart : undefined}
         >
           <span className={`flex flex-col items-center relative ${shiftFill ? 'slide-right-fill' : ''}`}>  
             <span>x</span>
@@ -457,6 +485,7 @@ export function Step1({ expression, onNext, onReset }) {
               className={`border-t w-full text-center relative ${(denomDrag.isDragging || denomDrag.placedRight) ? 'border-gray-400 text-gray-400' : 'border-[#5750E3]'} ${denomDrag.placedRight ? 'strike-through' : ''} ${rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? 'glow-highlight cursor-grab':''} ${leftDenomVanished? 'fade-out-left-slow':''}`}
               style={rightStage===3 && !denomDrag.placedRight && !denomDrag.isDragging ? {textShadow:'0 0 4px rgba(87,80,227,0.6), 0 0 6px rgba(87,80,227,0.4)'}:{}}
               onMouseDown={startDenomDrag}
+              onTouchStart={startDenomDrag}
             >{equation.denominator}</span>) }
           </span>
                       <span className="relative inline-block ml-2">
@@ -468,6 +497,7 @@ export function Step1({ expression, onNext, onReset }) {
                     textShadow: '0 0 4px rgba(87,80,227,0.6), 0 0 6px rgba(87,80,227,0.4)'
                   } : {}}
                   onMouseDown={messageIndex === 1 ? handleDragStart : undefined}
+                  onTouchStart={messageIndex === 1 ? handleDragStart : undefined}
                 >
                   {equation.b >= 0 ? '+' : ''}{equation.b}
                 </span>

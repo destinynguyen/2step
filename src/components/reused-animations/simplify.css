@@ -17,10 +17,10 @@
   50% {transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(251,191,36,0.8));}
   100% {transform: scale(1); filter: drop-shadow(0 0 0 rgba(251,191,36,0));}
 }
-.glow-scale {animation: glowScale 0.4s ease;}
+.glow-scale {animation: glowScale 0.6s ease;}
 
 @keyframes quickFadeOut {to {opacity: 0;}}
-.quick-fade-out {animation: quickFadeOut 0.3s ease forwards;}
+.quick-fade-out {animation: quickFadeOut 0.6s ease forwards;}
 
 @keyframes popIn {
   0% {transform: scale(0); opacity:0;}

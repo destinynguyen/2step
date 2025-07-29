@@ -65,7 +65,7 @@ export function Step1({ expression, onNext, onReset }) {
     "To do this, you perform the inverse operations to both sides of the equation.", // 2
     "Great! Now drag the denominator term so we can eliminate the fraction.",        // 3
     "Almost there – watch how we simplify the right side.",                          // 4
-    "Nice! Press the forward arrow once more to compute the value of x.",            // 5
+    `Great! Multiply ${equation.c - equation.b} by ${equation.denominator} to find the value of x.`, // 5
     "All done! We've isolated x."                                                    // 6
   ];
 

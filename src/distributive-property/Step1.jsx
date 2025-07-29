@@ -459,7 +459,17 @@ export function Step1({ expression, onNext, onReset }) {
     };
   }, [dragState.isDragging]);
 
-  const isAnimating = (messageIndex !== flexiMessages.length - 1) && (dragState.isDragging || denomDrag.isDragging || rightStage===1 || rightStage===2 || multStage===1 || multStage===2);
+  // Show animated Flexi_Stars during any active animation phase, including strike-through drawing.
+  const isAnimating = (messageIndex !== flexiMessages.length - 1) && (
+    dragState.isDragging ||
+    denomDrag.isDragging ||
+    rightStage === 1 || rightStage === 2 ||
+    multStage === 1 || multStage === 2 ||
+    // strike-through of +b/-b
+    (dragState.placedRight && !vanishLeft) ||
+    // strike-through of denominator ×a
+    (denomDrag.placedRight && !leftDenomVanished)
+  );
 
   return (
     <Container 
